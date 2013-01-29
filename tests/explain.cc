@@ -38,8 +38,11 @@ int fib( int n ) {
   else {
     chandle<int> x;
     spawn( fib, x, n-1 );
+    std::cout << "|";
     int y = call( fib, n-2 );
+    std::cout << "|";
     ssync();
+    std::cout << "\nsync\n";
     return y + (int)x;
   }
 }
@@ -53,8 +56,10 @@ int my_main( int argc, char * argv[] ) {
   int n = atoi( argv[1] );
   chandle<int> k;
   spawn( fib, k, n );
+  std::cout << "|";
   // std::cout << "my_main() after spawn before sync\n";
   ssync();
+  std::cout << "\nsync\n";
   // should be leaf-call(s)
   std::cout << "fib(" << n << ") = " << k << "\n";
   return 0;
@@ -62,12 +67,12 @@ int my_main( int argc, char * argv[] ) {
 #else
 int main( int argc, char * argv[] ) {
   if( argc <= 1 ) {
-    std::cerr << "Usage: " << argv[0] << " <n>\n";
+    std::cerr << "Usage: " << argv[0] << " <n>\nspawn counter = " << spawn_counter;
     return 1;
   }
   int n = atoi( argv[1] );
   int k = run( fib, n );
-  std::cout << "fib(" << n << ") = " << k << "\n";
+  std::cout << "fib(" << n << ") = " << k << "\nspawn counter = " << spawn_counter;
   return 0;
 }
 #endif
