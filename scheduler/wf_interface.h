@@ -460,14 +460,11 @@ void create_parallel_reduction_task( AccumTy accum, ReductionTy * reduc ) {
     spawn( &parallel_reduction_task<Monad, AccumTy, ReductionTy>, accum, reduc );
 }
 
-extern int spawn_counter = 0;
 
 #if STORED_ANNOTATIONS
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-	//std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    //++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     task_data_t td( arg_size( args... ),
 		    the_task_graph_traits::arg_stored_size<Tn...>(),
@@ -485,8 +482,6 @@ spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), Tn... args ) {
-	//std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    //++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     task_data_t td( arg_size( args... ),
 		    the_task_graph_traits::arg_stored_size<Tn...>(),
@@ -500,12 +495,10 @@ spawn( TR (*func)( Tn... ), Tn... args ) {
 	stack_frame::create_pending( func, fr, (future*)0, td, args... );
     }
 }
-<div>
-</div>template<typename TR, typename... Tn>
+
+template<typename TR, typename... Tn>
 inline typename std::enable_if<!std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-    //std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    ++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     task_data_t td( arg_size( args... ),
 		    the_task_graph_traits::arg_stored_size<Tn...>(),
@@ -587,8 +580,6 @@ run( TR (*func)( Tn... ), Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-	//std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    ++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
 	stack_frame::invoke( &ch.get_future(), false, func, args... );
@@ -600,8 +591,6 @@ spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), Tn... args ) {
-	//std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    ++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
 	stack_frame::invoke( (future*)0, false, func, args... );
@@ -613,8 +602,6 @@ spawn( TR (*func)( Tn... ), Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<!std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-	//std::cout << "new spawn of " << func << " with the parameter size: " << arg_size( args... ) << "\n";
-    ++spawn_counter;
     stack_frame * fr = stack_frame::my_stack_frame();
     if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
 	stack_frame::invoke( &ch.get_future(), false, func, args... );

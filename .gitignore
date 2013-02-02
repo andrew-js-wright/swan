@@ -2,4 +2,3 @@
 *~
 # Ignore autoconf output dir
 autom4te.cache
-obj/*
