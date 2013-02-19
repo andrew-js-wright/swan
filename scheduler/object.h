@@ -41,6 +41,7 @@
 #include <cassert>
 #include <vector>
 
+
 #include "platform.h"
 #include "wf_task.h"
 #include "wf_frames.h"
@@ -48,6 +49,9 @@
 #include "lock.h"
 
 #include "debug.h"
+
+#include "../util/pp_time.h"
+
 
 // Do we really need objects?
 #if OBJECT_TASKGRAPH != 0
@@ -791,6 +795,8 @@ private:
     obj_payload * payload;        // data payload
     obj_instance<metadata_t> * obj; // pointer to the object for renaming purposes
     reduction_md<metadata_t> reduc; // hook for reduction-specific information
+    double ERT;                   // earliest run time - for critical path analysis
+    double tERT;                  // temporary earliest run time - for critical path analysis
 
     template<typename T, obj_modifiers_t OMod>
     friend class object_t; // versioned;
@@ -890,6 +896,29 @@ public:
 	    del_ref_delete();
 	}
     }
+
+  
+
+  // Getter and Setter for earliest ready time - Critical path analysis
+  void set_ert(double ert) { ERT = ert; }
+  double get_ert() { return ERT; }
+
+  // Earliest ready time set from an 'in' dependency
+  void set_indep_time(double ert){
+    if((ert + ERT) > tERT)
+      {
+	tERT = ert;
+      }
+  }
+
+  //TODO: Replace this with a clean
+  // Run this on the last dependency
+  void set_last_indep_time(double ert){
+    set_indep_time(ert);
+    ERT = tERT;
+  }
+
+
 private:
     // Setting noinline helps performance on AMD (Opteron 6100)
     // but not on Intel (Core i7).
@@ -1263,14 +1292,16 @@ namespace obj {
 template<typename MetaData_, typename Task>
 struct release_functor {
     Task * fr;
-    release_functor( Task * fr_ ) : fr( fr_ ) { fr->start_deregistration(); }
-    ~release_functor() { fr->stop_deregistration(); }
+         
+  release_functor( Task * fr_ ) : fr( fr_ ) { fr->start_deregistration(); }
+  ~release_functor() { fr->stop_deregistration(); }
 
     // In the default case, the internal obj_instance equals the external
     // obj_instance.
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
-	typedef typename DepTy<T>::metadata_t MetaData;
+      printf("Release called %s\n", "here");
+        typedef typename DepTy<T>::metadata_t MetaData;
 	dep_traits<MetaData, Task, DepTy>::arg_release( fr, obj_ext, sa );
 	if( !std::is_void< T >::value ) // tokens
 	    obj_ext.get_version()->del_ref();
@@ -1282,8 +1313,9 @@ struct release_functor {
     // from the external one.
     template<typename M>
     typename std::enable_if<std::is_class<M>::value, bool>::type
-    operator () ( reduction<M> obj_int,
+    operator () (reduction<M> obj_int,
 		  typename reduction<M>::dep_tags & tags ) {
+		  printf("%s\n", "object reduction");
 	typedef typename reduction<M>::metadata_t MetaData;
 	obj_version<MetaData> * v = tags.ext_version;
 	reduction<M> obj_ext = reduction<M>::create( v );
@@ -1309,13 +1341,14 @@ class grab_functor {
     obj_dep_traits * odt;
 public:
     grab_functor( Task * fr_, obj_dep_traits * odt_ )
-	: fr( fr_ ), odt( odt_ ) { }
+	: fr( fr_ ), odt( odt_ ) { printf("%s\n","In grab"); }
     
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> & obj_int, typename DepTy<T>::dep_tags & tags ) {
-	typedef typename DepTy<T>::metadata_t MetaData;
+      
+        typedef typename DepTy<T>::metadata_t MetaData;
 	DepTy<T> obj_ext = DepTy<T>::create( obj_int.get_version() );
-	// Renaming is impossible here: we have already started to work
+	// Renaming Is Impossible Here: we have already started to work
 	// on this object, so it is too late now to rename...
 	// rename<MetaData, T>( obj_ext, obj_int, tags );
 	dep_traits<MetaData, Task, DepTy>::template arg_issue( fr, obj_ext, &tags );
@@ -1360,6 +1393,7 @@ static inline void arg_issue_fn( Task * fr, obj_dep_traits * odt ) {
     fr->template start_registration<Tn...>();
     arg_apply_stored_fn( gfn, fr->get_task_data() );
     fr->stop_registration();
+    
 }
 #else
 // A "release function" to store inside the dep_traits.
@@ -1416,9 +1450,9 @@ struct dgrab_functor {
 	return true;
     }
 
-#if OBJECT_REDUCTION
-    template<typename M>
-    typename std::enable_if<std::is_class<M>::value, bool>::type
+#if Object_Reduction
+    Template<Typename M>
+    Typename std::enable_if<std::is_class<M>::value, bool>::type
     operator () ( reduction<M> & obj_ext, reduction<M> & obj_int,
 		  typename reduction<M>::dep_tags & tags ) {
 	typedef typename reduction<M>::metadata_t MetaData;
@@ -1434,6 +1468,7 @@ struct dgrab_functor {
 #endif
 
 };
+
 
 // Reduction expansion functor
 template<typename MetaData_, typename Task>
@@ -1646,7 +1681,158 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	gfn, off, args, tags, an... );
 #endif
     fr->stop_registration( wakeup );
+};
+
+  template< typename Task>
+struct critical_path_spawn_functor {
+    
+    Task * task;
+        
+    critical_path_spawn_functor( Task * task_ )
+      : task( task_ ) { }
+
+    bool operator () (){
+    
+      //typename stack_frame_traits<Frame>::metadata_ty * ofr
+      //= stack_frame_traits<Frame>::get_metadata( fr );
+      //ofr->template create<Tn...>(
+      // get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
+
+      // Set parent
+      //assert(!is_pending);
+
+      /*
+	No longer needed: this was to get the frame of task data.
+	metadata_ty * sfb = dynamic_cast<metadata_ty *>( ofr );
+	Frame * sf = stack_frame_traits<Frame>::get_frame_of( sfb );
+	typedef stack_frame_traits<Frame>::metadata_ty metadata_ty;
+      */
+
+      // Get parent metadata from the task
+      task_data_t * parent = task -> get_task_data().get_task_parent();
+      
+      // Set task's inital work variables
+      task->get_task_data().set_work_done(parent->get_work_done());
+      task->get_task_data().set_eet(pp_time());
+      task->get_task_data().set_child_work_done(0);
+      task->get_task_data().set_child_eet(0);
+
+      // Reset the parent's work variable
+      parent->set_work_done(0);
+      
+      //printf("Earliest Execution Time: %lu\n",task->get_task_data().get_work_done());
+      
+      return true;
+
+    }
+
+/*This will be used to handle other dependencies when the time comes
+
+ bool operator () ( DepTy<T> & obj_int, typename DepTy<T>::dep_tags & tags ) {
+      
+      typedef typename DepTy<T>::metadata_t MetaData;
+      DepTy<T> obj_ext = DepTy<T>::create( obj_int.get_version() );
+      // Renaming Is Impossible Here: we have already started to work
+      // on this object, so it is too late now to rename...
+      // rename<MetaData, T>( obj_ext, obj_int, tags );
+      dep_traits<MetaData, Task, DepTy>::template arg_issue( fr, obj_ext, &tags );
+      if( !std::is_void< T >::value ) // token
+	obj_ext.get_version()->add_ref();
+      if( !is_outdep< DepTy<T> >::value
+	  && !is_truedep< DepTy<T> >::value // static checks
+	  && !std::is_void< T >::value // token
+	  && obj_ext.get_version()->is_used_in_reduction() )
+	fr->get_task_data().set_finalization_required();
+      return true;
+      }*/
+
+    /* template<typename T, template<typename U> class DepTy>
+       bool operator () ( DepTy<T> obj_ext, DepTy<T> & obj_int,
+       typename DepTy<T>::dep_tags & tags ) {
+       typedef typename DepTy<T>::metadata_t MetaData;
+       // No renaming yet, unless we pass the same argument multiple times
+       // assert( obj_ext.get_version() == obj_int.get_version() );
+       rename<MetaData, T>( obj_ext, obj_int, tags );
+       dep_traits<MetaData, Task, DepTy>::template arg_issue( fr, obj_ext, &tags );
+       if( !std::is_void< T >::value ) // token
+       obj_ext.get_version()->add_ref();
+       if( !is_outdep< DepTy<T> >::value
+       && !is_truedep< DepTy<T> >::value // static checks
+       && !std::is_void< T >::value // token
+       && obj_ext.get_version()->is_used_in_reduction() )
+       fr->get_task_data().set_finalization_required();
+       return true;
+       }
+
+       #if OBJECT_REDUCTION
+       template<typename M>
+       typename std::enable_if<std::is_class<M>::value, bool>::type
+       operator () ( reduction<M> & obj_ext, reduction<M> & obj_int,
+       typename reduction<M>::dep_tags & tags ) {
+       typedef typename reduction<M>::metadata_t MetaData;
+       // Create a private copy for this task, if it is_ready
+       reduction_init<MetaData, M>( obj_int, tags, odt );
+       if( is_ready )
+       privatize<MetaData, M>( obj_ext, obj_int, tags );
+       // Normal issue sequence
+       obj_ext.get_version()->add_ref();
+       dep_traits<MetaData, Task, reduction>::template arg_issue( fr, obj_ext, &tags );
+       return true;
+       }
+       #endif*/
+  };
+
+
+// A function to record the critical path of tasks on their spawn.
+  template<typename Task>
+  static inline void critical_path_task(Task * task ) {
+    critical_path_spawn_functor<Task> cfn( task );
+    cfn();
+  }
+
+  /* template<typename MetaData, typename Task, typename... Tn>
+  static inline void critical_path_fn( Task * fr ) {
+    critical_path_spawn_functor<MetaData, Task> fn( fr );
+    char * args = fr->get_task_data().get_args_ptr();
+    char * tags = fr->get_task_data().get_tags_ptr();
+    // Doubt this will work - need to find a way to count the number of args
+    if( (count_object<Tn...>::value) > 0 )
+      {
+	arg_apply_fn<release_functor<MetaData, Task>,Tn...>( fn, args, tags );
+      }
+    else
+      {
+	fn();
+      }
+  }*/
+
+  //A function to record the critical path of tasks when they end
+  template<typename Task>
+  static inline void critical_path_task_end( Task * fr) {
+    unsigned long temp;
+
+    // Set parent
+    task_data_t * pr = fr->get_task_data().get_task_parent();
+
+    // calculate the amount of work done by the task
+    fr->get_task_data().set_work_done(fr->get_task_data().get_work_done() +
+				      fr->get_task_data().get_child_work_done());
+
+    // accumulate the work done from the task into the parent
+    pr->get_task_data().set_child_work_done(pr->get_task_data().get_child_work_done() +
+					    fr->get_task_data().get_work_done());
+
+    // calculate the earliest finish time for the task
+    if ( fr->get_task_data().get_eft() < (temp = fr->get_task_data().get_child_eft()) )
+      fr->get_task_data().set_eft(temp);
+
+    // calculate the parent's earlist finish child's time
+    if ( pr->get_task_data().get_child_eft() < (temp = fr->get_task_data().get_eft()) )
+      pr->get_task_data().set_child_eft(temp);
+     
+     
 }
+
 
 #if STORED_ANNOTATIONS
 // A "ini_ready function" to test readiness of objects at spawn-time.
@@ -1769,6 +1955,8 @@ stack_frame * stack_frame_or_null<stack_frame>( stack_frame * fr ) {
     return fr;
 }
 
+
+  //TODO - could add the stuff in here?
 template<typename StackFrame, typename FullFrame, typename Task>
 static inline
 Task * get_full_task( StackFrame * parent ) {
@@ -1776,46 +1964,60 @@ Task * get_full_task( StackFrame * parent ) {
     return stack_frame_traits<FullFrame>::get_metadata( fp );
 }
 
+  //This is the function that gets called at each spawn!!!
 template<typename Frame, typename StackFrame, typename FullFrame,
 	 typename QueuedFrame, typename MetaData, typename Task,
 	 typename FullTask, typename... Tn>
 inline void arg_issue( Frame * fr, StackFrame * parent, Tn & ... an ) {
+    
     assert( fr && "Non-null frame pointer required" );
     OBJ_PROF(arg_issue);
 
     if( (count_object<Tn...>::value) > 0 ) {
-	if( grab_now( fr ) /*fr->get_parent()->is_full()*/ ) {
-	    // errs() << "grab now " << fr << "\n";
-	    typename stack_frame_traits<Frame>::metadata_ty * ofr
-		= stack_frame_traits<Frame>::get_metadata( fr );
-	    typename stack_frame_traits<StackFrame>::metadata_ty * opr
-		= stack_frame_traits<StackFrame>::get_metadata( parent );
-	    ofr->enable_deps( true
+      if( grab_now( fr ) /*fr->get_parent()->is_full()*/ ) {
+	// errs() << "grab now " << fr << "\n";
+	typename stack_frame_traits<Frame>::metadata_ty * ofr
+	  = stack_frame_traits<Frame>::get_metadata( fr );
+	typename stack_frame_traits<StackFrame>::metadata_ty * opr
+	  = stack_frame_traits<StackFrame>::get_metadata( parent );
+	ofr->enable_deps( true
 #if !STORED_ANNOTATIONS
-			      , (void(*)(Task *, obj_dep_traits *))0
-			      , &arg_release_fn<MetaData,Task,Tn...>
+			  , (void(*)(Task *, obj_dep_traits *))0
+			  , &arg_release_fn<MetaData,Task,Tn...>
 #endif
-		);
-	    ofr->template create< Tn...>(
-		get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
+			  );
+	ofr->template create< Tn...>(
+				     get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
 
-	    arg_dgrab_fn<MetaData, Task, Tn...>(
-		ofr, opr, std::is_same<Frame,pending_frame>::value, an... );
-	} else {
-	    // errs() << "grab later " << fr << "\n";
-	    typename stack_frame_traits<Frame>::metadata_ty * ofr
-		= stack_frame_traits<Frame>::get_metadata( fr );
-	    ofr->enable_deps( false
+	task_data_t parent_task_data = opr->get_task_data();
+	ofr -> get_task_data().set_task_parent( &parent_task_data );
+
+	arg_dgrab_fn<MetaData, Task, Tn...>(
+					    ofr, opr, std::is_same<Frame,pending_frame>::value, an... );
+      } else {
+	// errs() << "grab later " << fr << "\n";
+	typename stack_frame_traits<Frame>::metadata_ty * ofr
+	  = stack_frame_traits<Frame>::get_metadata( fr );
+	ofr->enable_deps( false
 #if !STORED_ANNOTATIONS
-			      , &arg_issue_fn<MetaData,Task,Tn...>
-			      , &arg_release_fn<MetaData,Task,Tn...>
+			  , &arg_issue_fn<MetaData,Task,Tn...>
+			  , &arg_release_fn<MetaData,Task,Tn...>
 #endif
-		);
-	    ofr->template create<Tn...>(
-		get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
-	}
+			  );
+	ofr->template create<Tn...>(
+				    get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
+      }
     } else {
-	// errs() << "grab not (no objects) " << fr << "\n";
+
+      // If task has no task dependencies it will go here
+      
+      typename stack_frame_traits<Frame>::metadata_ty * ofr
+	= stack_frame_traits<Frame>::get_metadata( fr );
+
+      // Call critical path functor on tasks with no object deps
+      critical_path_task< Task >( ofr );
+      
+      // errs() << "grab not (no objects) " << fr << "\n";
     }
 }
 
@@ -2526,6 +2728,9 @@ struct task_graph_traits {
     release_task( StackFrame * fr ) {
 	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr );
+	critical_path_task_end( 
+			       ofr 
+			       );
 	assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
     }

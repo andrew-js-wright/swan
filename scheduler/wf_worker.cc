@@ -441,13 +441,20 @@ worker_state::worker_fn() {
     {
 	full_frame * child = sd.get_popped();
 	full_frame * parent = child->get_parent();
+
 	assert( sd.empty()
 		&& "Deque must be empty when returning through longjmp()" );
 	assert( child->get_frame()->is_call() && "Must be call here" );
+
+	if(child->get_frame() == root){
+	  printf("You've reached the root.");
+	}
+
 	the_task_graph_traits::release_task( child->get_frame() );
 	parent->lock( &sd );
 	child->lock( &sd );
 	stack_frame * child_fr = child->get_frame();
+
 	child->~full_frame(); // full_frame destructor, because not deleted
 	delete child_fr;      // de-allocates child also, but no destructor call
 	unconditional_steal( parent );
@@ -476,6 +483,10 @@ worker_state::worker_fn() {
 #endif
 	child->lock( &sd );
 	stack_frame * child_fr = child->get_frame();
+	if(child_fr == root){
+	  printf("You've reached the root..\n");
+	  printf("Work done by root was: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
+	}
 	child->~full_frame(); // full_frame destructor, because not deleted
 	delete child_fr;      // de-allocates child also, but no destructor call
 	if( next ) {
@@ -490,6 +501,9 @@ worker_state::worker_fn() {
     case edc_sync:
     {
 	stack_frame * fr = sd.youngest();
+	if(fr == root){
+	  printf("You've reached the root -");
+	}
 	assert( fr->get_owner() == &sd );
 	if( !sd.only_has( fr ) )
 	    sd.convert_and_pop_all();
@@ -499,13 +513,14 @@ worker_state::worker_fn() {
 	sd.pop_sync();
 	fr->set_state( fs_suspended );
 	fr->set_owner( 0 ); // suspended
+
 	provably_good_steal( fr->get_full() ); // fr->get_first_child() ??
 	last_case = 3;
 	break;
     }
     case edc_bootstrap: // value 0 - only first time
     {
-	assert( !sd.youngest() || sd.youngest()->get_full()->test_lock( 0 ) );
+      assert( !sd.youngest() || sd.youngest()->get_full()->test_lock( 0 ) );
 	last_case = 4;
 	break;
     }

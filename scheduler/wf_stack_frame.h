@@ -193,10 +193,11 @@ public:
 #else
     pending_frame( size_t as_, size_t ts_, size_t fts_, size_t nargs_,
 		   future * cr_, void (*func_)(void),
-		   bool (*stub_)( stack_frame *, void (*)(void) ) )
+		   bool (*stub_)( stack_frame *, void (*)(void) ),
+		   task_data_t * p_)
 	: cresult( cr_ ), func( func_ ), stub( stub_ )
 	{
-	    get_task_data().initialize( as_, ts_, fts_, nargs_ );
+	  get_task_data().initialize( as_, ts_, fts_, nargs_, p_ );
 	    static_assert( (sizeof(*this) % CACHE_ALIGNMENT) == 0,
 			   "Padding of pending_frame failed" );
 	}
@@ -342,7 +343,19 @@ public:
     bool test_lock() const { return vlock.test_lock(); }
 };
 
+template<typename T>
+task_data_t * get_task_data_pre_stack_frame(T parent) {
+  return &parent->get_task_data();
+}
+
 class stack_frame_base : private obj::stack_frame_base_obj {
+
+template<typename T>
+    friend struct stack_frame_traits;
+
+public:
+    typedef obj::stack_frame_base_obj metadata_ty;
+
 protected:
     future * cresult;
     frame_state_t state;
@@ -374,15 +387,15 @@ protected:
 #endif
 		 + inherited_size<obj::stack_frame_base_obj>::value
 		 + sizeof(dbg_continuation) > pad0;
-
-public:
-    // Dummy frame constructor
+public:  
+  // Dummy frame constructor
     stack_frame_base( char * end_of_stack, size_t nargs_, stack_frame * parent_,
 		      spawn_deque * owner_, bool call_ )
 	: call( call_ ), ff( 0 ), parent( parent_ ), owner( owner_ ) {
 	static_assert( (sizeof(stack_frame_base) & 7) == 0,
 		       "stack_frame_base alignment" );
-	get_task_data().initialize( 0, 0, 0, end_of_stack, nargs_ );
+	// give the dummy a null parent
+	get_task_data().initialize( 0, 0, 0, end_of_stack, nargs_, NULL );
     }
     // Executing frame constructor
 #if STORED_ANNOTATIONS
@@ -393,17 +406,17 @@ public:
     }
 #else
     stack_frame_base( size_t as_, size_t ts_, size_t fts_, char * end_of_stack,
-		      size_t nargs_, stack_frame * parent_,
+		      size_t nargs_, stack_frame * parent_, 
 		      spawn_deque * owner_, bool call_ )
 	: call( call_ ), ff( 0 ), parent( parent_ ), owner( owner_ ) {
-	get_task_data().initialize( as_, ts_, fts_, end_of_stack, nargs_ );
+      get_task_data().initialize( as_, ts_, fts_, end_of_stack, nargs_,get_task_data_pre_stack_frame<stack_frame *>( parent_ ));
     }
 #endif
     // Conversion from pending_frame
     stack_frame_base( task_data_t & data_, char * end_of_stack,
 		      stack_frame * parent_, spawn_deque * owner_, bool call_ )
 	: call( call_ ), ff( 0 ), parent( parent_ ), owner( owner_ ) {
-	get_task_data().initialize( data_ );
+      get_task_data().initialize( data_ );
     }
     inline ~stack_frame_base();
 
@@ -863,14 +876,15 @@ struct pending_frame_traits<pending_frame> {
 
 template<>
 struct stack_frame_traits<stack_frame> {
-    typedef stack_frame frame_ty;
-    typedef stack_frame::metadata_ty metadata_ty;
+  typedef stack_frame frame_ty;
+  typedef stack_frame::metadata_ty metadata_ty;
 
-    // static frame_ty *
-    // get_frame_of( metadata_ty * pf ) { return static_cast<frame_ty *>( pf ); }
+  // hope this is correct
+  //static frame_ty *
+  //get_frame_of( metadata_ty * pf ) { return static_cast<frame_ty *>( pf ); }
 
-    static metadata_ty *
-    get_metadata( frame_ty * pf ) { return pf->get_metadata(); }
+  static metadata_ty *
+  get_metadata( frame_ty * pf ) { return pf->get_metadata(); }
 };
 
 #endif // STACK_FRAME_H

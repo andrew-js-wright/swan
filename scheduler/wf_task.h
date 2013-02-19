@@ -31,6 +31,9 @@
 #include "platform.h"
 #include "wf_frames.h"
 
+#include "../util/pp_time.h"
+#include "lock.h"
+
 // make this into a template
 class future {
     return_value result;
@@ -148,6 +151,19 @@ class task_data_t {
     char * arg_buf;
     char * args;
     char * tags;
+  unsigned long EET; //Store the earliest execution time of the task - Critical path analysis 
+  unsigned long EFT; //Earliest finish time
+  unsigned long child_work_done;
+  unsigned long work_done;
+  unsigned long child_EET;
+  unsigned long child_EFT;
+  // Decided it was a good idea to put the parent here as we need it regardless
+  // of which type of frame we are accessing.
+  task_data_t * parent;
+
+  // Create lock when to prevent multiple access of the parent
+  cas_mutex mutex;
+
 #if STORED_ANNOTATIONS
     size_t nargs;
 #endif
@@ -160,13 +176,14 @@ class task_data_t {
     bool req_fin;
 
 public:
+
     task_data_t() { }
     ~task_data_t() {
 	if( arg_buf )
 	    delete[] arg_buf;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
-		     size_t nargs_ ) {
+		     size_t nargs_, task_data_t * parent_ ) {
 	fn_tags_size = (fn_tags_size+15) & ~15;
 	arg_buf = new char[((args_size+15)&~15)+fn_tags_size+tags_size];
 	args = &arg_buf[0];
@@ -178,9 +195,10 @@ public:
 	req_fin = false;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+	parent = parent_;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
-		     char * end_of_stack, size_t nargs_ ) {
+		     char * end_of_stack, size_t nargs_, task_data_t * parent_ ) {
 	arg_buf = 0;
 #if STORED_ANNOTATIONS
 	nargs = nargs_;
@@ -194,6 +212,7 @@ public:
 	req_fin = false;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+	parent = parent_;
     }
     void initialize( task_data_t & data ) {
 	arg_buf = data.arg_buf;
@@ -206,6 +225,7 @@ public:
 	data.arg_buf = 0;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+	parent = &data;
     }
 
     char * get_args_ptr() const { return args; }
@@ -231,6 +251,34 @@ public:
 public:
     const task_data_t & get_task_data() const { return *this; }
           task_data_t & get_task_data()       { return *this; }
+
+
+// Getter and Setter for earliest execute time - Critical path analysis
+  void set_eet(unsigned long eet) { EET = eet; }
+  unsigned long get_eet() { return EET; }
+  
+  void set_child_eet(unsigned long eet) { child_EET = eet; }
+  unsigned long get_child_eet() { return child_EET; }
+
+  void set_work_done(unsigned long work) { work_done = work; }
+  unsigned long get_work_done() { return (pp_time() - EET); }
+
+  void set_child_work_done(unsigned long work) { child_work_done = work; }
+  unsigned long get_child_work_done() { return child_work_done; }
+
+  void set_eft(unsigned long eft) { EFT = eft; }
+  unsigned long get_eft() { return EFT; }
+
+  void set_child_eft(unsigned long eft) { child_EFT = eft; }
+  unsigned long get_child_eft() { return child_EFT; }
+  
+  void set_task_parent(task_data_t * p) {
+    // Acquire lock on parent before update
+    p->mutex.lock(); 
+    parent = p; 
+    p->mutex.unlock();
+  }
+  task_data_t * get_task_parent() { return parent; }
 };
 
 //----------------------------------------------------------------------
