@@ -437,6 +437,7 @@ worker_state::worker_fn() {
 
     // See how we got here
     switch( sjr ) {
+
     case edc_call:
     {
 	full_frame * child = sd.get_popped();
@@ -448,6 +449,9 @@ worker_state::worker_fn() {
 
 	if(child->get_frame() == root){
 	  printf("You've reached the root.");
+	}
+	if(parent->get_state() == fs_dummy){
+	  printf("You've reached the root. By checking for parent Dummy");
 	}
 
 	the_task_graph_traits::release_task( child->get_frame() );
