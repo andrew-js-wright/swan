@@ -450,9 +450,10 @@ worker_state::worker_fn() {
 	if(child->get_frame() == root){
 	  printf("You've reached the root.");
 	}
-	if(parent->get_state() == fs_dummy){
-	  printf("You've reached the root. By checking for parent Dummy");
-	}
+	if(parent->get_frame()->get_state() == fs_dummy)
+	  {
+	    printf("You've reached the root via the parent being a dummy.");
+	  }
 
 	the_task_graph_traits::release_task( child->get_frame() );
 	parent->lock( &sd );
@@ -491,6 +492,11 @@ worker_state::worker_fn() {
 	  printf("You've reached the root..\n");
 	  printf("Work done by root was: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
 	}
+	if(parent->get_frame()->get_state() == fs_dummy)
+	  {
+	    printf("Total work done is: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
+	    printf("Critical duration is: %lu\n", child_fr->get_metadata()->get_task_data().get_critical_duration());
+	   }
 	child->~full_frame(); // full_frame destructor, because not deleted
 	delete child_fr;      // de-allocates child also, but no destructor call
 	if( next ) {

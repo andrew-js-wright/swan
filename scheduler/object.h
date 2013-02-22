@@ -1710,12 +1710,18 @@ struct critical_path_spawn_functor {
 
       // Get parent metadata from the task
       task_data_t * parent = task -> get_task_data().get_task_parent();
-      
+      parent->set_end_time();
+      parent->set_critical_duration(
+				    parent->get_critical_duration() +
+				    (parent->get_end_time() - parent->get_start_time())
+				    );
+
+      task->set_critical_duration(parent->get_critical_duration());
       // Set task's inital work variables
       task->get_task_data().set_work_done(parent->get_work_done());
-      task->get_task_data().set_eet(pp_time());
+      task->get_task_data().set_start_time();
       task->get_task_data().set_child_work_done(0);
-      task->get_task_data().set_child_eet(0);
+      task->get_task_data().set_child_est(0);
 
       // Reset the parent's work variable
       parent->set_work_done(0);
@@ -1811,26 +1817,43 @@ struct critical_path_spawn_functor {
   static inline void critical_path_task_end( Task * fr) {
     unsigned long temp;
 
+    fr->get_task_data().set_end_time();
+
     // Set parent
     task_data_t * pr = fr->get_task_data().get_task_parent();
 
+    unsigned long task_duration = (fr->get_task_data().get_end_time() - 
+				   fr->get_task_data().get_start_time());
+
     // calculate the amount of work done by the task
     fr->get_task_data().set_work_done(fr->get_task_data().get_work_done() +
+				      task_duration +
 				      fr->get_task_data().get_child_work_done());
+    printf("Total work done by returning task: %lu\n",fr->get_task_data().get_work_done());
 
     // accumulate the work done from the task into the parent
-    pr->get_task_data().set_child_work_done(pr->get_task_data().get_child_work_done() +
+    pr->get_task_data().set_work_done(pr->get_task_data().get_child_work_done() +
 					    fr->get_task_data().get_work_done());
 
-    // calculate the earliest finish time for the task
-    if ( fr->get_task_data().get_eft() < (temp = fr->get_task_data().get_child_eft()) )
-      fr->get_task_data().set_eft(temp);
+    fr->get_task_data().set_critical_duration(fr->get_task_data().get_critical_duration() +
+					      (fr->get_task_data().get_end_time() -
+					       fr->get_task_data().get_start_time()));
 
-    // calculate the parent's earlist finish child's time
-    if ( pr->get_task_data().get_child_eft() < (temp = fr->get_task_data().get_eft()) )
-      pr->get_task_data().set_child_eft(temp);
-     
-     
+    if(fr->get_task_data().get_critical_duration() < (temp = fr->get_task_data().get_critical_duration()))
+      {
+	fr->set_critical_duration(temp);
+      }
+
+    if(pr->get_child_critical_duration() < (temp=fr->get_task_data().get_critical_duration()))
+      {
+	pr->set_child_critical_duration(temp);
+      }
+
+    pr->set_start_time();
+
+    //    printf("Total child work done done after returning task: %lu\n",pr->get_task_data().get_child_work_done());
+
+
 }
 
 

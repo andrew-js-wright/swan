@@ -5,7 +5,7 @@ $ git clone or unpack tar-ball into directory swan
 $ cd swan
 $ mkdir obj
 $ cd obj
-$ ../configure CC=gcc-4.6 CXX=g++-4.6
+$ ../configure CC=gcc-mp-4.6 CXX=g++-mp-4.6
 
 To build in debugging mode:
 $ OPT="-O0 -DMODE=0" make

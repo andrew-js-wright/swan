@@ -151,12 +151,20 @@ class task_data_t {
     char * arg_buf;
     char * args;
     char * tags;
-  unsigned long EET; //Store the earliest execution time of the task - Critical path analysis 
-  unsigned long EFT; //Earliest finish time
+
+  //work related variables
+  unsigned long start_time;
+  unsigned long end_time;
+
   unsigned long child_work_done;
   unsigned long work_done;
-  unsigned long child_EET;
-  unsigned long child_EFT;
+
+  unsigned long EST; //Store the earliest execution time of the task - Critical path analysis 
+  unsigned long child_EST;
+
+  unsigned long critical_duration; //critical path
+  unsigned long child_critical_duration;
+
   // Decided it was a good idea to put the parent here as we need it regardless
   // of which type of frame we are accessing.
   task_data_t * parent;
@@ -196,6 +204,7 @@ public:
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
 	parent = parent_;
+	critical_duration = 0;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
 		     char * end_of_stack, size_t nargs_, task_data_t * parent_ ) {
@@ -213,6 +222,7 @@ public:
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
 	parent = parent_;
+	critical_duration = 0;
     }
     void initialize( task_data_t & data ) {
 	arg_buf = data.arg_buf;
@@ -225,7 +235,8 @@ public:
 	data.arg_buf = 0;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
-	parent = &data;
+	//parent = &data;
+	critical_duration = 0;
     }
 
     char * get_args_ptr() const { return args; }
@@ -252,25 +263,30 @@ public:
     const task_data_t & get_task_data() const { return *this; }
           task_data_t & get_task_data()       { return *this; }
 
+  void set_start_time() { start_time = pp_time(); }
+  unsigned long get_start_time() { return start_time; }
+
+  void set_end_time() { end_time = pp_time(); }
+  unsigned long get_end_time() { return end_time; }
 
 // Getter and Setter for earliest execute time - Critical path analysis
-  void set_eet(unsigned long eet) { EET = eet; }
-  unsigned long get_eet() { return EET; }
+  void set_est(unsigned long est) { EST = est; }
+  unsigned long get_est() { return EST; }
   
-  void set_child_eet(unsigned long eet) { child_EET = eet; }
-  unsigned long get_child_eet() { return child_EET; }
+  void set_child_est(unsigned long est) { child_EST = est; }
+  unsigned long get_child_est() { return child_EST; }
 
   void set_work_done(unsigned long work) { work_done = work; }
-  unsigned long get_work_done() { return (pp_time() - EET); }
+  unsigned long get_work_done() { return work_done; }
 
   void set_child_work_done(unsigned long work) { child_work_done = work; }
   unsigned long get_child_work_done() { return child_work_done; }
 
-  void set_eft(unsigned long eft) { EFT = eft; }
-  unsigned long get_eft() { return EFT; }
+  void set_critical_duration(unsigned long cd) { critical_duration = cd; }
+  unsigned long get_critical_duration() { return critical_duration; }
 
-  void set_child_eft(unsigned long eft) { child_EFT = eft; }
-  unsigned long get_child_eft() { return child_EFT; }
+  void set_child_critical_duration(unsigned long cd) { child_critical_duration = cd; }
+  unsigned long get_child_critical_duration() { return child_critical_duration; }
   
   void set_task_parent(task_data_t * p) {
     // Acquire lock on parent before update
