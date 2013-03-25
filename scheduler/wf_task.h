@@ -169,6 +169,14 @@ class task_data_t {
   // of which type of frame we are accessing.
   task_data_t * parent;
 
+  // This flag will be set if the task has been spawned, regardless of whether it
+  // is run in parallel or not.
+  bool spawned;
+
+public:
+  int task_depth;
+  unsigned long id;
+
   // Create lock when to prevent multiple access of the parent
   cas_mutex mutex;
 
@@ -205,10 +213,14 @@ public:
 	assert( (intptr_t(tags) & 15) == 0 );
 	parent = parent_;
 	critical_duration = 0;
+	start_time = pp_time();
+	task_depth = 0;
+	id = pp_time();
+	spawned = false;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
 		     char * end_of_stack, size_t nargs_, task_data_t * parent_ ) {
-	arg_buf = 0;
+      arg_buf = 0;
 #if STORED_ANNOTATIONS
 	nargs = nargs_;
 #endif
@@ -223,6 +235,12 @@ public:
 	assert( (intptr_t(tags) & 15) == 0 );
 	parent = parent_;
 	critical_duration = 0;
+	start_time = pp_time();
+	task_depth = 0;
+	id = pp_time();
+	child_critical_duration = 0;
+	work_done = 0;
+	spawned = false;
     }
     void initialize( task_data_t & data ) {
 	arg_buf = data.arg_buf;
@@ -235,8 +253,12 @@ public:
 	data.arg_buf = 0;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
-	//parent = &data;
+	start_time = pp_time();
+	id = pp_time();
 	critical_duration = 0;
+	child_critical_duration = 0;
+	work_done = 0;
+	spawned = false;
     }
 
     char * get_args_ptr() const { return args; }
@@ -269,7 +291,7 @@ public:
   void set_end_time() { end_time = pp_time(); }
   unsigned long get_end_time() { return end_time; }
 
-// Getter and Setter for earliest execute time - Critical path analysis
+  // Getter and Setter for earliest execute time - Critical path analysis
   void set_est(unsigned long est) { EST = est; }
   unsigned long get_est() { return EST; }
   
@@ -288,13 +310,11 @@ public:
   void set_child_critical_duration(unsigned long cd) { child_critical_duration = cd; }
   unsigned long get_child_critical_duration() { return child_critical_duration; }
   
-  void set_task_parent(task_data_t * p) {
-    // Acquire lock on parent before update
-    p->mutex.lock(); 
-    parent = p; 
-    p->mutex.unlock();
-  }
+  void set_task_parent(task_data_t * p) { parent = p; }
   task_data_t * get_task_parent() { return parent; }
+
+  void set_spawned() { spawned = true; }
+  bool get_spawned() { return spawned; }
 };
 
 //----------------------------------------------------------------------

@@ -488,15 +488,13 @@ worker_state::worker_fn() {
 #endif
 	child->lock( &sd );
 	stack_frame * child_fr = child->get_frame();
-	if(child_fr == root){
-	  printf("You've reached the root..\n");
-	  printf("Work done by root was: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
-	}
 	if(parent->get_frame()->get_state() == fs_dummy)
 	  {
+	    critical_path_task_end(child_fr->get_metadata());
 	    printf("Total work done is: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
-	    printf("Critical duration is: %lu\n", child_fr->get_metadata()->get_task_data().get_critical_duration());
-	   }
+	    printf("Critical duration is: %lu | depth: %d\n", child_fr->get_metadata()->get_task_data().get_critical_duration(), child_fr->get_metadata()->get_task_data().task_depth);
+	    printf("Parallelism: %6.3f\n",((double)child_fr->get_metadata()->get_task_data().get_work_done()/(double)child_fr->get_metadata()->get_task_data().get_critical_duration()));
+	  }
 	child->~full_frame(); // full_frame destructor, because not deleted
 	delete child_fr;      // de-allocates child also, but no destructor call
 	if( next ) {
@@ -511,9 +509,6 @@ worker_state::worker_fn() {
     case edc_sync:
     {
 	stack_frame * fr = sd.youngest();
-	if(fr == root){
-	  printf("You've reached the root -");
-	}
 	assert( fr->get_owner() == &sd );
 	if( !sd.only_has( fr ) )
 	    sd.convert_and_pop_all();

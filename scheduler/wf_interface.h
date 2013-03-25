@@ -221,86 +221,86 @@ void stack_frame::invoke( future * cresult,
 #if STORED_ANNOTATIONS
 			  task_data_t & task_data_p,
 #endif
-			  bool _is_call, TR (*func)( Tn... ), Tn... args ) {
-    // Create new stack frame, put arguments on frame and move
-    // stack pointer to it. Then call function on new stack.
-    // When function returns normally (not because parent was stolen),
-    // then free the child stack.
-    stack_frame * cur_frame = stack_frame::my_stack_frame();
-    assert( cur_frame->get_state() == fs_executing );
-    assert( cur_frame->get_owner() == worker_state::tls()->get_deque() );
+	bool _is_call, TR (*func)( Tn... ), Tn... args ) {
+  // Create new stack frame, put arguments on frame and move
+  // stack pointer to it. Then call function on new stack.
+  // When function returns normally (not because parent was stolen),
+  // then free the child stack.
+  stack_frame * cur_frame = stack_frame::my_stack_frame();
+  assert( cur_frame->get_state() == fs_executing );
+  assert( cur_frame->get_owner() == worker_state::tls()->get_deque() );
 
 #if PROFILE_WORKER
-    worker_state::tls()->get_profile_worker().num_invoke++;
+  worker_state::tls()->get_profile_worker().num_invoke++;
 #endif
 
 #if STORED_ANNOTATIONS
-    stack_frame * frame
-	= new stack_frame( cresult, task_data_p, false, _is_call );
+  stack_frame * frame
+    = new stack_frame( cresult, task_data_p, false, _is_call );
 #else
-    // Create child frame and push it on deque
-    size_t args_size = arg_size( args... ); // statically computed
-    size_t tags_size = the_task_graph_traits::arg_stored_size<Tn...>();
-    size_t fn_tags_size = the_task_graph_traits::fn_stored_size();
-    size_t num_args = arg_num<Tn...>(); // statically computed
+  // Create child frame and push it on deque
+  size_t args_size = arg_size( args... ); // statically computed
+  size_t tags_size = the_task_graph_traits::arg_stored_size<Tn...>();
+  size_t fn_tags_size = the_task_graph_traits::fn_stored_size();
+  size_t num_args = arg_num<Tn...>(); // statically computed
 
-    stack_frame * frame
-	= new stack_frame( args_size, tags_size, fn_tags_size, num_args,
-			   cur_frame, cresult, false, _is_call );
+  stack_frame * frame
+    = new stack_frame( args_size, tags_size, fn_tags_size, num_args,
+		       cur_frame, cresult, false, _is_call );
 
-    // Copy the arguments to our stack frame
-    frame->push_args( args... );
+  // Copy the arguments to our stack frame
+  frame->push_args( args... );
 #endif
 
-    LOG( id_invoke, frame );
-    wf_trace( frame, cur_frame, (void*)func, !_is_call, true );
+  LOG( id_invoke, frame );
+  wf_trace( frame, cur_frame, (void*)func, !_is_call, true );
 
-    // Grab the arguments, potentially modifying runtime state arguments
-    wf_arg_issue( frame, cur_frame, args... );
+  // Grab the arguments, potentially modifying runtime state arguments
+  wf_arg_issue( frame, cur_frame, args... );
 
-    // Save the PIC register, which is ebx on the supported target
-    // Can't do this from within the stub, because gcc changes ebx before
-    // we can copy.
+  // Save the PIC register, which is ebx on the supported target
+  // Can't do this from within the stub, because gcc changes ebx before
+  // we can copy.
 #ifdef __PIC__
-    cur_frame->saved_ebx = get_pr();
+  cur_frame->saved_ebx = get_pr();
 #endif
 
-    // The functions that the stub needs to call
-    void (*void_func)(void) = reinterpret_cast<void (*)(void)>(func);
+  // The functions that the stub needs to call
+  void (*void_func)(void) = reinterpret_cast<void (*)(void)>(func);
 
-    // The parent is no longer executing
-    cur_frame->set_state( fs_waiting );
+  // The parent is no longer executing
+  cur_frame->set_state( fs_waiting );
 
-    // Call the stub to control stack unwinding and pass it the spawned
-    // function. Spawned function arguments are already on the stack.
-    bool stolen
-	= stack_frame::prevent_inlining_dir<&stack_frame::
-	template split_stub<fc_executing, TR, Tn...> >( frame, void_func );
-    if( likely( !stolen ) ) { // identical to try_pop() successful
+  // Call the stub to control stack unwinding and pass it the spawned
+  // function. Spawned function arguments are already on the stack.
+  bool stolen
+    = stack_frame::prevent_inlining_dir<&stack_frame::
+    template split_stub<fc_executing, TR, Tn...> >( frame, void_func );
+  if( likely( !stolen ) ) { // identical to try_pop() successful
 #if IMPROVED_STUBS
-	CLOBBER_CALLEE_SAVED_BUT1(); // only when prevent_inlining() is inlined?
+    CLOBBER_CALLEE_SAVED_BUT1(); // only when prevent_inlining() is inlined?
 #endif
-	// Parent has now been sinked into current call stack. Moved
-	// update of parent->state and spawn_deque->popped to try_pop().
-	assert( frame->get_state() == fs_executing );
-	assert( !frame->is_full() );
-	assert( frame->get_owner() == worker_state::tls()->get_deque() );
-	stack_frame * parent = stack_frame::my_stack_frame(); // frame->get_parent(); // or my_stack_frame()
-	parent->verify();
-	// parent->check_continuation(); // may not be valid: returned over stack!
-	parent->clear_continuation();
-	// We don't need to lock the parent when freeing because the child
-	// is not full!
-	assert( !frame->is_full() && "Frame may not be full here" );
-	the_task_graph_traits::release_task( frame );
-	delete frame;
-    } else {
-	// We come here if the frame has been stolen.
-	// resume() sets the state to executing
-	CLOBBER_CALLEE_SAVED_BUT1(); // because of resume!
-	assert( cur_frame->get_owner() == worker_state::tls()->get_deque() );
-	assert( cur_frame->get_state() == fs_executing );
-    }
+    // Parent has now been sinked into current call stack. Moved
+    // update of parent->state and spawn_deque->popped to try_pop().
+    assert( frame->get_state() == fs_executing );
+    assert( !frame->is_full() );
+    assert( frame->get_owner() == worker_state::tls()->get_deque() );
+    stack_frame * parent = stack_frame::my_stack_frame(); // frame->get_parent(); // or my_stack_frame()
+    parent->verify();
+    // parent->check_continuation(); // may not be valid: returned over stack!
+    parent->clear_continuation();
+    // We don't need to lock the parent when freeing because the child
+    // is not full!
+    assert( !frame->is_full() && "Frame may not be full here" );
+    the_task_graph_traits::release_task( frame );
+    delete frame;
+  } else {
+    // We come here if the frame has been stolen.
+    // resume() sets the state to executing
+    CLOBBER_CALLEE_SAVED_BUT1(); // because of resume!
+    assert( cur_frame->get_owner() == worker_state::tls()->get_deque() );
+    assert( cur_frame->get_state() == fs_executing );
+  }
 }
 
 template<typename TR, typename... Tn>
@@ -495,6 +495,7 @@ spawn( TR (*func)( Tn... ), Tn... args ) {
     } else {
 	stack_frame::create_pending( func, fr, (future*)0, td, args... );
     }
+    printf("wf_interface.h spawn() ln 489 run on %lu\n", fr->get_task_data().id);
 }
 
 template<typename TR, typename... Tn>
@@ -512,6 +513,7 @@ spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
     } else {
 	stack_frame::create_pending( func, fr, &ch.get_future(), td, args... );
     }
+    printf("wf_interface.h spawn() ln 500 run on %lu\n", fr->get_task_data().id);
 }
 
 template<typename TR, typename... Tn>
@@ -581,29 +583,35 @@ run( TR (*func)( Tn... ), Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-    stack_frame * fr = stack_frame::my_stack_frame();
-    if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
-	stack_frame::invoke( &ch.get_future(), false, func, args... );
-    } else {
-	stack_frame::create_pending( func, fr, &ch.get_future(), args... );
-    }
+  printf("spawn call 1\n");
+  stack_frame * fr = stack_frame::my_stack_frame();
+  fr->get_task_data().set_spawned();
+  if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
+    stack_frame::invoke( &ch.get_future(), false, func, args... );
+  } else {
+    stack_frame::create_pending( func, fr, &ch.get_future(), args... );
+  }
 }
 
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), Tn... args ) {
-    stack_frame * fr = stack_frame::my_stack_frame();
-    if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
-	stack_frame::invoke( (future*)0, false, func, args... );
-    } else {
-	stack_frame::create_pending( func, fr, (future*)0, args... );
-    }
+  stack_frame * fr = stack_frame::my_stack_frame();
+  fr->get_task_data().set_spawned();
+  printf("spawn call %lu\n", fr->get_task_data().id);
+  if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
+    stack_frame::invoke( (future*)0, false, func, args... );
+  } else {
+    stack_frame::create_pending( func, fr, (future*)0, args... );
+  }
 }
 
 template<typename TR, typename... Tn>
 inline typename std::enable_if<!std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
+  printf("spawn call 3\n");
     stack_frame * fr = stack_frame::my_stack_frame();
+  fr->get_task_data().set_spawned();
     if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
 	stack_frame::invoke( &ch.get_future(), false, func, args... );
     } else {
@@ -670,6 +678,14 @@ void ssync() {
     stack_frame * fr = stack_frame::my_stack_frame();
     assert( fr->get_state() == fs_executing );
     LOG( id_sync_enter, fr );
+
+    // this should be reserved for a sync statement!
+    if(fr->get_metadata()->get_task_data().get_child_critical_duration() >
+       fr->get_metadata()->get_task_data().get_critical_duration())
+      {
+	fr->get_metadata()->get_task_data().set_critical_duration(
+	   fr->get_metadata()->get_task_data().get_child_critical_duration());
+      }
 
 #if PROFILE_WORKER
     worker_state::tls()->get_profile_worker().num_ssync++;

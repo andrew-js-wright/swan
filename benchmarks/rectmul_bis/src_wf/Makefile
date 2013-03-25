@@ -1,7 +1,7 @@
 PROG=rectmul
 
 include ../../Makefile.wf
-include ../../lib/Makefile.use_us
+include ../../../util/Makefile.use_us
 
 $(PROG): LDLIBS+=$(HOME)/ray/lib/libgoto2_nehalem-r1.13_T1.a
 

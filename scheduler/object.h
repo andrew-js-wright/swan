@@ -1300,7 +1300,6 @@ struct release_functor {
     // obj_instance.
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
-      printf("Release called %s\n", "here");
         typedef typename DepTy<T>::metadata_t MetaData;
 	dep_traits<MetaData, Task, DepTy>::arg_release( fr, obj_ext, sa );
 	if( !std::is_void< T >::value ) // tokens
@@ -1687,105 +1686,32 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 struct critical_path_spawn_functor {
     
     Task * task;
+    task_data_t * parent;
         
     critical_path_spawn_functor( Task * task_ )
-      : task( task_ ) { }
-
-    bool operator () (){
-    
-      //typename stack_frame_traits<Frame>::metadata_ty * ofr
-      //= stack_frame_traits<Frame>::get_metadata( fr );
-      //ofr->template create<Tn...>(
-      // get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
-
-      // Set parent
-      //assert(!is_pending);
-
-      /*
-	No longer needed: this was to get the frame of task data.
-	metadata_ty * sfb = dynamic_cast<metadata_ty *>( ofr );
-	Frame * sf = stack_frame_traits<Frame>::get_frame_of( sfb );
-	typedef stack_frame_traits<Frame>::metadata_ty metadata_ty;
-      */
-
-      // Get parent metadata from the task
-      task_data_t * parent = task -> get_task_data().get_task_parent();
+      : task( task_ ) {
+      parent = task -> get_task_data().get_task_parent();
       parent->set_end_time();
-      parent->set_critical_duration(
-				    parent->get_critical_duration() +
-				    (parent->get_end_time() - parent->get_start_time())
-				    );
+
+      unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
+      
+      parent->set_critical_duration(parent->get_critical_duration() +
+				    parent_duration);
+
+      /*if(parent -> get_critical_duration() < parent -> get_child_critical_duration())
+	parent -> set_critical_duration(parent -> get_child_critical_duration());*/
+
+      parent->set_work_done(parent->get_work_done() + parent_duration);
 
       task->set_critical_duration(parent->get_critical_duration());
-      // Set task's inital work variables
-      task->get_task_data().set_work_done(parent->get_work_done());
-      task->get_task_data().set_start_time();
-      task->get_task_data().set_child_work_done(0);
-      task->get_task_data().set_child_est(0);
 
-      // Reset the parent's work variable
-      parent->set_work_done(0);
-      
-      //printf("Earliest Execution Time: %lu\n",task->get_task_data().get_work_done());
-      
-      return true;
-
+      task->get_task_data().task_depth = parent->task_depth + 1;
+      /*printf("starting | id: %lu ", task->get_task_data().id);
+      printf("pcd: %7lu | ", parent->get_critical_duration());
+      printf("pccd: %7lu | ", parent->get_task_data().get_child_critical_duration());
+      printf("pid: %lu ", parent->get_task_data().id);
+      printf("| d: %d\n", task->get_task_data().task_depth);*/
     }
-
-/*This will be used to handle other dependencies when the time comes
-
- bool operator () ( DepTy<T> & obj_int, typename DepTy<T>::dep_tags & tags ) {
-      
-      typedef typename DepTy<T>::metadata_t MetaData;
-      DepTy<T> obj_ext = DepTy<T>::create( obj_int.get_version() );
-      // Renaming Is Impossible Here: we have already started to work
-      // on this object, so it is too late now to rename...
-      // rename<MetaData, T>( obj_ext, obj_int, tags );
-      dep_traits<MetaData, Task, DepTy>::template arg_issue( fr, obj_ext, &tags );
-      if( !std::is_void< T >::value ) // token
-	obj_ext.get_version()->add_ref();
-      if( !is_outdep< DepTy<T> >::value
-	  && !is_truedep< DepTy<T> >::value // static checks
-	  && !std::is_void< T >::value // token
-	  && obj_ext.get_version()->is_used_in_reduction() )
-	fr->get_task_data().set_finalization_required();
-      return true;
-      }*/
-
-    /* template<typename T, template<typename U> class DepTy>
-       bool operator () ( DepTy<T> obj_ext, DepTy<T> & obj_int,
-       typename DepTy<T>::dep_tags & tags ) {
-       typedef typename DepTy<T>::metadata_t MetaData;
-       // No renaming yet, unless we pass the same argument multiple times
-       // assert( obj_ext.get_version() == obj_int.get_version() );
-       rename<MetaData, T>( obj_ext, obj_int, tags );
-       dep_traits<MetaData, Task, DepTy>::template arg_issue( fr, obj_ext, &tags );
-       if( !std::is_void< T >::value ) // token
-       obj_ext.get_version()->add_ref();
-       if( !is_outdep< DepTy<T> >::value
-       && !is_truedep< DepTy<T> >::value // static checks
-       && !std::is_void< T >::value // token
-       && obj_ext.get_version()->is_used_in_reduction() )
-       fr->get_task_data().set_finalization_required();
-       return true;
-       }
-
-       #if OBJECT_REDUCTION
-       template<typename M>
-       typename std::enable_if<std::is_class<M>::value, bool>::type
-       operator () ( reduction<M> & obj_ext, reduction<M> & obj_int,
-       typename reduction<M>::dep_tags & tags ) {
-       typedef typename reduction<M>::metadata_t MetaData;
-       // Create a private copy for this task, if it is_ready
-       reduction_init<MetaData, M>( obj_int, tags, odt );
-       if( is_ready )
-       privatize<MetaData, M>( obj_ext, obj_int, tags );
-       // Normal issue sequence
-       obj_ext.get_version()->add_ref();
-       dep_traits<MetaData, Task, reduction>::template arg_issue( fr, obj_ext, &tags );
-       return true;
-       }
-       #endif*/
   };
 
 
@@ -1793,28 +1719,19 @@ struct critical_path_spawn_functor {
   template<typename Task>
   static inline void critical_path_task(Task * task ) {
     critical_path_spawn_functor<Task> cfn( task );
-    cfn();
   }
 
-  /* template<typename MetaData, typename Task, typename... Tn>
-  static inline void critical_path_fn( Task * fr ) {
-    critical_path_spawn_functor<MetaData, Task> fn( fr );
-    char * args = fr->get_task_data().get_args_ptr();
-    char * tags = fr->get_task_data().get_tags_ptr();
-    // Doubt this will work - need to find a way to count the number of args
-    if( (count_object<Tn...>::value) > 0 )
-      {
-	arg_apply_fn<release_functor<MetaData, Task>,Tn...>( fn, args, tags );
-      }
-    else
-      {
-	fn();
-      }
-  }*/
+//A function to record the critical path of tasks when they end
+template<typename Task>
+struct critical_path_task_end_functor {
+    
+  Task * fr;
+  task_data_t * pr;
 
-  //A function to record the critical path of tasks when they end
-  template<typename Task>
-  static inline void critical_path_task_end( Task * fr) {
+
+  critical_path_task_end_functor( Task * task)
+    : fr( task )
+  {
     unsigned long temp;
 
     fr->get_task_data().set_end_time();
@@ -1822,176 +1739,251 @@ struct critical_path_spawn_functor {
     // Set parent
     task_data_t * pr = fr->get_task_data().get_task_parent();
 
-    unsigned long task_duration = (fr->get_task_data().get_end_time() - 
-				   fr->get_task_data().get_start_time());
+    unsigned long task_duration = 
+      (
+       fr->get_task_data().get_end_time() - 
+       fr->get_task_data().get_start_time());
 
     // calculate the amount of work done by the task
-    fr->get_task_data().set_work_done(fr->get_task_data().get_work_done() +
-				      task_duration +
-				      fr->get_task_data().get_child_work_done());
-    printf("Total work done by returning task: %lu\n",fr->get_task_data().get_work_done());
+    fr->get_task_data().set_work_done
+      (
+       fr->get_task_data().get_work_done() +
+       task_duration );
 
     // accumulate the work done from the task into the parent
-    pr->get_task_data().set_work_done(pr->get_task_data().get_child_work_done() +
-					    fr->get_task_data().get_work_done());
+    pr->get_task_data().mutex.lock();
+    pr->get_task_data().set_work_done
+      (
+       pr->get_task_data().get_work_done() +
+       fr->get_task_data().get_work_done()
+       );
 
-    fr->get_task_data().set_critical_duration(fr->get_task_data().get_critical_duration() +
-					      (fr->get_task_data().get_end_time() -
-					       fr->get_task_data().get_start_time()));
+    pr->get_task_data().mutex.unlock();
 
-    if(fr->get_task_data().get_critical_duration() < (temp = fr->get_task_data().get_critical_duration()))
+    // get critical duration of parent and add it to this task's duration
+    fr->get_task_data().set_critical_duration
+      (
+       fr->get_task_data().get_critical_duration() +
+       task_duration);
+
+    if(fr->get_task_data().get_critical_duration() < 
+       (temp = fr->get_task_data().get_child_critical_duration()))
       {
 	fr->set_critical_duration(temp);
       }
+ 
+    pr->get_task_data().mutex.lock();
 
-    if(pr->get_child_critical_duration() < (temp=fr->get_task_data().get_critical_duration()))
+
+    // If the task has been spawned then compare with the
+    // parent's child critical duration
+    if(pr->get_task_data().get_child_critical_duration() < 
+       (temp = fr->get_task_data().get_critical_duration()))
       {
 	pr->set_child_critical_duration(temp);
       }
 
+    if(!fr->get_task_data().get_spawned()){
+      // If the task hasn't been spawned then add the duration directly onto the parent's
+      // critical path
+      pr->get_task_data().set_critical_duration
+	(
+	 pr->get_task_data().get_critical_duration()
+	 + task_duration
+	 );
+    }
+      
+    pr->get_task_data().mutex.unlock();
+
     pr->set_start_time();
 
-    //    printf("Total child work done done after returning task: %lu\n",pr->get_task_data().get_child_work_done());
+    printf("id: %7lu | ", fr->get_task_data().id);
+    printf("spawned: %d | ", fr->get_task_data().get_spawned());
+    printf("dur: %7lu | ", task_duration);
+    printf("cdir: %7lu | ", fr->get_task_data().get_critical_duration());
+    //printf("wd: %7lu | ", fr->get_task_data().get_work_done());
+    //printf("pwd: %7lu | ", pr->get_task_data().get_work_done());
+    printf("ccdir: %7lu | ", fr->get_task_data().get_child_critical_duration());
+    printf("d: %d\n", fr->get_task_data().task_depth);
+  }
 
+  template<typename T>
+  bool operator () ( indep<T> & obj, typename indep<T>::dep_tags & sa ) {
+    printf("FUNCTOR CALL: indep applied to object***\n");
+    //MetaData object_metadata = obj.get_version()->get_metadata();
+    return true;
+  }
 
-}
+  template<typename T, template<typename U> class DepTy>
+  bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
+    return true;
+  } 
 
+  template<typename T, template<typename U> class DepTy>
+  bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
+    return true;
+  } 
+#if OBJECT_COMMUTATIVITY
+  template<typename T>
+  bool operator () ( cinoutdep<T> & obj, typename cinoutdep<T>::dep_tags & sa ) {
+    return true;
+  }
+#endif
+#if OBJECT_REDUCTION
+  template<typename T>
+  bool operator () ( reduction<T> & obj, typename reduction<T>::dep_tags & sa ) {
+    return true;
+  }
+#endif
+
+};
+
+  template<typename Task, typename... Tn>
+  static inline void critical_path_task_end( Task * task){
+    printf("FUNCTOR CALL: critical_path_task_end with Tn...\n");
+    critical_path_task_end_functor<Task> task_end_f(task);
+    char * args = task->get_task_data().get_args_ptr();
+    char * tags = task->get_task_data().get_tags_ptr();
+    arg_apply_fn<critical_path_task_end_functor<Task>,Tn...>( task_end_f, args, tags );
+  }
 
 #if STORED_ANNOTATIONS
-// A "ini_ready function" to test readiness of objects at spawn-time.
-template<typename MetaData, typename Task>
-static inline bool arg_dini_ready_fn( task_data_t & td ) {
+  // A "ini_ready function" to test readiness of objects at spawn-time.
+  template<typename MetaData, typename Task>
+  static inline bool arg_dini_ready_fn( task_data_t & td ) {
     dexpand_functor<MetaData, Task> xfn;
     arg_apply_stored_fn( xfn, td );
     dini_ready_functor<MetaData, Task> rfn;
     return arg_apply_stored_fn( rfn, td );
-}
+  }
 
-// A "profiling ini_ready function".
-template<typename MetaData, typename Task>
-static inline bool arg_dprof_ready_fn( task_data_t & td ) {
+  // A "profiling ini_ready function".
+  template<typename MetaData, typename Task>
+  static inline bool arg_dprof_ready_fn( task_data_t & td ) {
     dprof_ready_functor<MetaData, Task> rfn;
     return arg_apply_stored_fn( rfn, td );
-}
+  }
 #else
-// A "ini_ready function" to test readiness of objects at spawn-time.
-template<typename MetaData, typename Task, typename... Tn>
-static inline bool arg_dini_ready_fn( Tn ... an ) {
+  // A "ini_ready function" to test readiness of objects at spawn-time.
+  template<typename MetaData, typename Task, typename... Tn>
+  static inline bool arg_dini_ready_fn( Tn ... an ) {
     dexpand_functor<MetaData, Task> xfn;
     arg_dapply_fn( xfn, 0, an... );
     dini_ready_functor<MetaData, Task> rfn;
     return arg_dapply_fn( rfn, 0, an... );
-}
+  }
 
-// A "profiling ini_ready function".
-template<typename MetaData, typename Task, typename... Tn>
-static inline bool arg_dprof_ready_fn( Tn ... an ) {
+  // A "profiling ini_ready function".
+  template<typename MetaData, typename Task, typename... Tn>
+  static inline bool arg_dprof_ready_fn( Tn ... an ) {
     dprof_ready_functor<MetaData, Task> rfn;
     return arg_dapply_fn( rfn, 0, an... );
-}
+  }
 #endif
 
-// ------------------------------------------------------------------------
-// Interface for the spawn(), call(), leaf_call(), ssync() functions.
-// ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
+  // Interface for the spawn(), call(), leaf_call(), ssync() functions.
+  // ------------------------------------------------------------------------
 
-// Check argument readiness
+  // Check argument readiness
 #if STORED_ANNOTATIONS
-template<typename MetaData, typename Task>
-static inline bool arg_ready( task_data_t & task_data ) {
+  template<typename MetaData, typename Task>
+  static inline bool arg_ready( task_data_t & task_data ) {
     bool ready = arg_dini_ready_fn<MetaData, Task>( task_data );
 
     OBJ_PROF(arg_ini_ready_calls);
 #if PROFILE_OBJECT
     arg_dprof_ready_fn<MetaData, Task>( task_data );
     if( ready )
-	OBJ_PROF(arg_ini_ready);
+      OBJ_PROF(arg_ini_ready);
 #endif
 
     return ready;
-}
+  }
 #else
-template<typename MetaData, typename Task, typename... Tn>
-static inline bool arg_ready( Tn... an ) {
+  template<typename MetaData, typename Task, typename... Tn>
+  static inline bool arg_ready( Tn... an ) {
     bool ready = arg_dini_ready_fn<MetaData, Task, Tn...>( an... );
+
+    //critical_path_task( an... );
 
     OBJ_PROF(arg_ini_ready_calls);
 #if PROFILE_OBJECT
     arg_dprof_ready_fn<MetaData, Task, Tn...>( an... );
     if( ready )
-	OBJ_PROF(arg_ini_ready);
+      OBJ_PROF(arg_ini_ready);
 #endif
 
     return ready;
-}
+  }
 #endif
 
-template<typename... Tn>
-struct count_object;
+  template<typename... Tn>
+  struct count_object;
 
-template<>
-struct count_object<> {
+  template<>
+  struct count_object<> {
     static const size_t value = 0;
-};
+  };
 
-template<typename T, typename... Tn>
-struct count_object<T, Tn...> : public count_object<Tn...> {
+  template<typename T, typename... Tn>
+  struct count_object<T, Tn...> : public count_object<Tn...> {
     static const size_t value =
-	( is_object<T>::value ? 1 : 0 ) + count_object<Tn...>::value;
-};
+      ( is_object<T>::value ? 1 : 0 ) + count_object<Tn...>::value;
+  };
 
-template<typename Frame, typename... Tn>
-inline bool grab_now( Frame * fr ) {
+  template<typename Frame, typename... Tn>
+  inline bool grab_now( Frame * fr ) {
     return fr->get_parent()->is_full();
-}
+  }
 
-template<>
-inline bool grab_now<pending_frame>( pending_frame * fr ) {
+  template<>
+  inline bool grab_now<pending_frame>( pending_frame * fr ) {
     return true;
-}
+  }
 
-/*
->> define frame_metadata_traits<Frame> (Frame=SF,FF,PF)
-met members: (varianten op enable_deps)
-arg_issue<Tn...>( Frame *, bool immediate/delayed ) (rest kennen we lokaal)
+  /*
+    >> define frame_metadata_traits<Frame> (Frame=SF,FF,PF)
+    met members: (varianten op enable_deps)
+    arg_issue<Tn...>( Frame *, bool immediate/delayed ) (rest kennen we lokaal)
 
->> er is een opkuis mogelijkheid in de arg_issue functies
->> arg_dgrab_and_store_fn vs arg_issue_fn: beiden doen store, naam verschilt
-     + depth update op frame
-     + arg_dgrab_and_store_fn samen met afzonderlijke frame update depth
->> arg_dgrab_fn: doet geen store, geen obj depth, geen frame depth update
+    >> er is een opkuis mogelijkheid in de arg_issue functies
+    >> arg_dgrab_and_store_fn vs arg_issue_fn: beiden doen store, naam verschilt
+    + depth update op frame
+    + arg_dgrab_and_store_fn samen met afzonderlijke frame update depth
+    >> arg_dgrab_fn: doet geen store, geen obj depth, geen frame depth update
 
-wf_arg_ready_and_grab instead of wf_arg_ready.
-wf_arg_issue remains for call/leaf_call interface?
+    wf_arg_ready_and_grab instead of wf_arg_ready.
+    wf_arg_issue remains for call/leaf_call interface?
 
-wf_arg_release_and_get_ready_task instead of wf_arg_release...
-right child stealing interface with depth disappears then
-*/
+    wf_arg_release_and_get_ready_task instead of wf_arg_release...
+    right child stealing interface with depth disappears then
+  */
 
-template<typename Frame>
-static inline
-stack_frame * stack_frame_or_null( Frame * fr ) { return 0; }
+  template<typename Frame>
+  static inline
+  stack_frame * stack_frame_or_null( Frame * fr ) { return 0; }
 
-template<>
-inline
-stack_frame * stack_frame_or_null<stack_frame>( stack_frame * fr ) {
+  template<>
+  inline
+  stack_frame * stack_frame_or_null<stack_frame>( stack_frame * fr ) {
     return fr;
-}
+  }
 
 
   //TODO - could add the stuff in here?
-template<typename StackFrame, typename FullFrame, typename Task>
-static inline
-Task * get_full_task( StackFrame * parent ) {
+  template<typename StackFrame, typename FullFrame, typename Task>
+  static inline
+  Task * get_full_task( StackFrame * parent ) {
     FullFrame * fp = parent->get_full();
     return stack_frame_traits<FullFrame>::get_metadata( fp );
-}
+  }
 
-  //This is the function that gets called at each spawn!!!
-template<typename Frame, typename StackFrame, typename FullFrame,
-	 typename QueuedFrame, typename MetaData, typename Task,
-	 typename FullTask, typename... Tn>
-inline void arg_issue( Frame * fr, StackFrame * parent, Tn & ... an ) {
+  //This is the function that gets called at each spawn, call and run.
+  template<typename Frame, typename StackFrame, typename FullFrame,
+	   typename QueuedFrame, typename MetaData, typename Task,
+	   typename FullTask, typename... Tn>
+  inline void arg_issue( Frame * fr, StackFrame * parent, Tn & ... an ) {
     
     assert( fr && "Non-null frame pointer required" );
     OBJ_PROF(arg_issue);
@@ -2017,6 +2009,8 @@ inline void arg_issue( Frame * fr, StackFrame * parent, Tn & ... an ) {
 
 	arg_dgrab_fn<MetaData, Task, Tn...>(
 					    ofr, opr, std::is_same<Frame,pending_frame>::value, an... );
+	printf("called from arg_issue when object count > 0\n");
+	critical_path_task<Task>(ofr);
       } else {
 	// errs() << "grab later " << fr << "\n";
 	typename stack_frame_traits<Frame>::metadata_ty * ofr
@@ -2030,49 +2024,50 @@ inline void arg_issue( Frame * fr, StackFrame * parent, Tn & ... an ) {
 	ofr->template create<Tn...>(
 				    get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
       }
+      
     } else {
 
       // If task has no task dependencies it will go here
       
       typename stack_frame_traits<Frame>::metadata_ty * ofr
 	= stack_frame_traits<Frame>::get_metadata( fr );
-
+     
       // Call critical path functor on tasks with no object deps
       critical_path_task< Task >( ofr );
       
       // errs() << "grab not (no objects) " << fr << "\n";
     }
-}
+  }
 
-// ------------------------------------------------------------------------
-// ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
 #if STORED_ANNOTATIONS
-struct all_tags_base : public annotation_tags { };
+  struct all_tags_base : public annotation_tags { };
 #else
-struct all_tags_base { };
+  struct all_tags_base { };
 #endif
 
-struct function_tags_base { };
+  struct function_tags_base { };
 
-struct indep_tags_base : public all_tags_base { };
-struct outdep_tags_base : public all_tags_base { };
-struct inoutdep_tags_base : public all_tags_base { };
-struct cinoutdep_tags_base : public all_tags_base { };
+  struct indep_tags_base : public all_tags_base { };
+  struct outdep_tags_base : public all_tags_base { };
+  struct inoutdep_tags_base : public all_tags_base { };
+  struct cinoutdep_tags_base : public all_tags_base { };
 
-template<typename MetaData>
-struct reduction_tags_base : public all_tags_base {
+  template<typename MetaData>
+  struct reduction_tags_base : public all_tags_base {
     // obj_version<MetaData> int_version;
     obj_version<MetaData> * ext_version;
     int idx;
-};
+  };
 
-// ------------------------------------------------------------------------
-// BOUNDARY BETWEEN OBJECT AND TICKET/TASKGRAPH SPECIALIZATION
-// ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
+  // BOUNDARY BETWEEN OBJECT AND TICKET/TASKGRAPH SPECIALIZATION
+  // ------------------------------------------------------------------------
 
-// ------------------------------------------------------------------------
-// Importing definitions for task graph
-// ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
+  // Importing definitions for task graph
+  // ------------------------------------------------------------------------
 }
 
 #if OBJECT_TASKGRAPH == 1
@@ -2751,9 +2746,7 @@ struct task_graph_traits {
     release_task( StackFrame * fr ) {
 	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr );
-	critical_path_task_end( 
-			       ofr 
-			       );
+	critical_path_task_end( ofr );
 	assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
     }
@@ -2761,14 +2754,16 @@ struct task_graph_traits {
     release_task( PendingFrame * fr ) {
 	typename stack_frame_traits<PendingFrame>::metadata_ty * ofr
 	    = stack_frame_traits<PendingFrame>::get_metadata( fr );
+	critical_path_task_end( ofr );
 	assert( ofr->enabled() );
 	ofr->release_deps( ofr );
     }
     static QueuedFrame *
     release_task_and_get_ready( FullFrame * fr ) {
-	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
+       typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr->get_frame() );
-	typename stack_frame_traits<FullFrame>::metadata_ty * opf
+       critical_path_task_end(ofr);
+       typename stack_frame_traits<FullFrame>::metadata_ty * opf
 	    = stack_frame_traits<FullFrame>::get_metadata( fr->get_parent() );
 	// assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
