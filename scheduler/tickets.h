@@ -44,6 +44,8 @@
 #include "lfllist.h"
 #include "lock.h"
 
+#include "../util/pp_time.h"
+
 namespace obj {
 
 // The type holding the depth of an object in the task graph.
@@ -54,7 +56,7 @@ typedef uint64_t depth_t;
 // ----------------------------------------------------------------------
 // tkt_metadata: dependency-tracking metadata (not versioning)
 // ----------------------------------------------------------------------
-class tkt_metadata {
+  class tkt_metadata {
 public:
     struct fifo_like {
 	typedef uint32_t ctr_t;
@@ -94,9 +96,14 @@ private:
     fifo_like reductions;         // head and tail counter for readers
 #endif
     depth_t depth;                // depth in task graph
+    unsigned long critical_duration;  // used to calculate the critical path
+    unsigned long id;  // used to identify the object
 
 public:
-    tkt_metadata() : depth( 0 ) { }
+    tkt_metadata() : depth( 0 ) {
+      critical_duration = 0;
+      id = pp_time();
+    }
     ~tkt_metadata() {
 	assert( readers.empty()
 		&& "Must have zero readers when destructing obj_version" );
@@ -119,6 +126,7 @@ public:
 #endif
 	    ;
     }
+    
 
     // Track oustanding readers with a head and tail counter
     void add_reader() { readers.adv_tail(); }
@@ -137,6 +145,7 @@ public:
     bool chk_writer_tag( tag_t w ) const volatile { return writers.chk_tag(w); }
     bool has_writers() const volatile { return !writers.empty(); }
     tag_t get_writer_tag() const { return writers.get_tag(); }
+  
 
 #if OBJECT_COMMUTATIVITY
     // Track commutative IO
@@ -174,6 +183,11 @@ public:
 	assert( depth <= d );
 	depth = d;
     }
+
+  unsigned long get_critical_duration() { return critical_duration; }
+  void set_critical_duration( unsigned long cd ) { critical_duration = cd; }
+
+    unsigned long get_id() { return id; }
 
     friend std::ostream & operator << ( std::ostream & os, const tkt_metadata & md );
 };

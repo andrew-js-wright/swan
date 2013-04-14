@@ -786,217 +786,196 @@ public:
 // This information is allocated dynamically in-line with the actual data.
 template<typename MetaData>
 class obj_version {
-    typedef uint32_t ctr_t;
-    typedef MetaData metadata_t;
+  typedef uint32_t ctr_t;
+  typedef MetaData metadata_t;
 private:
-    metadata_t meta;              // metadata for dependency tracking
-    ctr_t refcnt;                 // reference count;guess from readers/writers?
-    uint32_t size;                // size of the data space in bytes
-    obj_payload * payload;        // data payload
-    obj_instance<metadata_t> * obj; // pointer to the object for renaming purposes
-    reduction_md<metadata_t> reduc; // hook for reduction-specific information
-    double ERT;                   // earliest run time - for critical path analysis
-    double tERT;                  // temporary earliest run time - for critical path analysis
-
-    template<typename T, obj_modifiers_t OMod>
-    friend class object_t; // versioned;
-
-    template<typename T, obj_modifiers_t OMod>
-    friend class unversioned;
-
-    template<typename MetaData_, typename T, size_t DataSize>
-    friend class obj_unv_instance; // for constructor
-
-    // First-create constructor
-    obj_version( size_t sz, obj_instance<metadata_t> * obj_, typeinfo tinfo )
-	: refcnt( 1 ), size( sz ), obj( obj_ ) {
-	payload = obj_payload::create( sz, tinfo );
-	// std::cerr << "Create obj_version " << this << " payload " << (void *)payload << "\n";
-    }
-    // First-create constructor for unversioned objects
-    obj_version( size_t sz, char * payload_ptr, typeinfo tinfo )
-	: refcnt( 1 ), size( sz ), obj( (obj_instance<metadata_t> *)0 ) {
-	payload = obj_payload::create( payload_ptr, tinfo );
-	// std::cerr << "Create obj_version " << this << " payload " << (void *)payload << "\n";
-    }
-    // Constructor for nesting
-    obj_version( size_t sz, obj_instance<metadata_t> * obj_,
-		 obj_payload * payload_ )
-	: refcnt( 1 ), size( sz ), payload( payload_ ), obj( obj_ ) {
-	payload->add_ref();
-	// std::cerr << "Nest obj_version " << this << " payload " << (void *)payload << "\n";
-    }
-    inline ~obj_version() {
-	// std::cerr << "Delete obj_version " << this << " payload " << (void *)payload << "\n";
-	assert( refcnt == 0 && "obj_version::refcnt must be 0 in destruct" );
-	payload->del_ref();
-    }
-
+  metadata_t meta;              // metadata for dependency tracking
+  ctr_t refcnt;                 // reference count;guess from readers/writers?
+  uint32_t size;                // size of the data space in bytes
+  obj_payload * payload;        // data payload
+  obj_instance<metadata_t> * obj; // pointer to the object for renaming purposes
+  reduction_md<metadata_t> reduc; // hook for reduction-specific information
 public:
-    template<typename T>
-    static obj_version<metadata_t> *
-    create( size_t n, obj_instance<metadata_t> * obj_ ) {
-	obj_version<metadata_t> * v
-	    = new obj_version<metadata_t>( n, obj_, typeinfo::create<T>() );
-	typeinfo::construct<T>( v->get_ptr() );
-	return v;
-    }
-    static obj_version<metadata_t> *
-    nest( obj_instance<metadata_t> * obj_, obj_instance<metadata_t> * src ) {
-	size_t n = src->get_version()->get_size();
-	obj_payload * payload = src->get_version()->get_payload();
-	return new obj_version<metadata_t>( n, obj_, payload );
-    }
-    static obj_version<metadata_t> *
-    nest( obj_instance<metadata_t> * obj_,
-	  obj_instance<metadata_t> * src,
-	  obj_version<metadata_t> * v_new ) {
-	size_t n = src->get_version()->get_size();
-	obj_payload * payload = src->get_version()->get_payload();
-	// errs() << "nest: payload=" << payload << " ext=" << src->get_version()
-	  //      << " int=" << v_new << "\n";
-	return new (v_new) obj_version<metadata_t>( n, obj_, payload );
-    }
-    static obj_version<metadata_t> *
-    nest( obj_instance<metadata_t> * obj_,
-	  obj_version<metadata_t> * v_new,
-	  obj_payload * payload ) {
-	size_t n = obj_->get_version()->get_size();
-	return new (v_new) obj_version<metadata_t>( n, obj_, payload );
-    }
-    static void
-    unnest( obj_instance<metadata_t> * obj_, obj_instance<metadata_t> * src ) {
-	obj_version<metadata_t> * src_v = src->get_version();
-	obj_version<metadata_t> * obj_v = obj_->get_version();
-	if( src_v->get_ptr() != obj_v->get_ptr() )
-	    obj_v->copy_to( src_v );
-    }
+  double critical_duration;     // earliest run time - for critical path analysis
+  double id;                    // id to ensure that the object version is being accessed correctly.
 
-    // Private: we don't want to expose the internal representation of the
-    // payload any more than necessary.
-    obj_payload * get_payload() { return payload; }
-    const obj_payload * get_payload() const { return payload; }
+  template<typename T, obj_modifiers_t OMod>
+  friend class object_t; // versioned
 
-public:
-    void * get_ptr() { return get_payload()->get_ptr(); }
-    const void * get_ptr() const { return get_payload()->get_ptr(); }
+  template<typename T, obj_modifiers_t OMod>
+  friend class unversioned;
 
-    size_t get_size() const { return size; }
+  template<typename MetaData_, typename T, size_t DataSize>
+  friend class obj_unv_instance; // for constructor
 
-    obj_instance<metadata_t> * get_instance() const { return obj; }
-
-    metadata_t * get_metadata() { return &meta; }
-    const metadata_t * get_metadata() const { return &meta; }
-
-    void add_ref() { __sync_fetch_and_add( &refcnt, 1 ); } // atomic!
-    void del_ref() {
-	assert( refcnt > 0 );
-	// Check equality to 1 because we check value before decrement.
-	if( __sync_fetch_and_add( &refcnt, -1 ) == 1 ) { // atomic!
-	    del_ref_delete();
-	}
-    }
-
-  
-
-  // Getter and Setter for earliest ready time - Critical path analysis
-  void set_ert(double ert) { ERT = ert; }
-  double get_ert() { return ERT; }
-
-  // Earliest ready time set from an 'in' dependency
-  void set_indep_time(double ert){
-    if((ert + ERT) > tERT)
-      {
-	tERT = ert;
-      }
+  // First-create constructor
+  obj_version( size_t sz, obj_instance<metadata_t> * obj_, typeinfo tinfo )
+    : refcnt( 1 ), size( sz ), obj( obj_ ) {
+    payload = obj_payload::create( sz, tinfo );
+    // std::cerr << "Create obj_version " << this << " payload " << (void *)payload << "\n";
+  }
+  // First-create constructor for unversioned objects
+  obj_version( size_t sz, char * payload_ptr, typeinfo tinfo )
+    : refcnt( 1 ), size( sz ), obj( (obj_instance<metadata_t> *)0 ) {
+    payload = obj_payload::create( payload_ptr, tinfo );
+    // std::cerr << "Create obj_version " << this << " payload " << (void *)payload << "\n";
+  }
+  // Constructor for nesting
+  obj_version( size_t sz, obj_instance<metadata_t> * obj_,
+	       obj_payload * payload_ )
+    : refcnt( 1 ), size( sz ), payload( payload_ ), obj( obj_ ) {
+    payload->add_ref();
+    // std::cerr << "Nest obj_version " << this << " payload " << (void *)payload << "\n";
+  }
+  inline ~obj_version() {
+    // std::cerr << "Delete obj_version " << this << " payload " << (void *)payload << "\n";
+    assert( refcnt == 0 && "obj_version::refcnt must be 0 in destruct" );
+    payload->del_ref();
   }
 
-  //TODO: Replace this with a clean
-  // Run this on the last dependency
-  void set_last_indep_time(double ert){
-    set_indep_time(ert);
-    ERT = tERT;
+public:
+  template<typename T>
+  static obj_version<metadata_t> *
+  create( size_t n, obj_instance<metadata_t> * obj_ ) {
+    obj_version<metadata_t> * v
+      = new obj_version<metadata_t>( n, obj_, typeinfo::create<T>() );
+    typeinfo::construct<T>( v->get_ptr() );
+    return v;
+  }
+  static obj_version<metadata_t> *
+  nest( obj_instance<metadata_t> * obj_, obj_instance<metadata_t> * src ) {
+    size_t n = src->get_version()->get_size();
+    obj_payload * payload = src->get_version()->get_payload();
+    return new obj_version<metadata_t>( n, obj_, payload );
+  }
+  static obj_version<metadata_t> *
+  nest( obj_instance<metadata_t> * obj_,
+	obj_instance<metadata_t> * src,
+	obj_version<metadata_t> * v_new ) {
+    size_t n = src->get_version()->get_size();
+    obj_payload * payload = src->get_version()->get_payload();
+    // errs() << "nest: payload=" << payload << " ext=" << src->get_version()
+    //      << " int=" << v_new << "\n";
+    return new (v_new) obj_version<metadata_t>( n, obj_, payload );
+  }
+  static obj_version<metadata_t> *
+  nest( obj_instance<metadata_t> * obj_,
+	obj_version<metadata_t> * v_new,
+	obj_payload * payload ) {
+    size_t n = obj_->get_version()->get_size();
+    return new (v_new) obj_version<metadata_t>( n, obj_, payload );
+  }
+  static void
+  unnest( obj_instance<metadata_t> * obj_, obj_instance<metadata_t> * src ) {
+    obj_version<metadata_t> * src_v = src->get_version();
+    obj_version<metadata_t> * obj_v = obj_->get_version();
+    if( src_v->get_ptr() != obj_v->get_ptr() )
+      obj_v->copy_to( src_v );
   }
 
+  // Private: we don't want to expose the internal representation of the
+  // payload any more than necessary.
+  obj_payload * get_payload() { return payload; }
+  const obj_payload * get_payload() const { return payload; }
+
+public:
+  void * get_ptr() { return get_payload()->get_ptr(); }
+  const void * get_ptr() const { return get_payload()->get_ptr(); }
+
+  size_t get_size() const { return size; }
+
+  obj_instance<metadata_t> * get_instance() const { return obj; }
+
+  metadata_t * get_metadata() { return &meta; }
+  const metadata_t * get_metadata() const { return &meta; }
+
+  void add_ref() { __sync_fetch_and_add( &refcnt, 1 ); } // atomic!
+  void del_ref() {
+    assert( refcnt > 0 );
+    // Check equality to 1 because we check value before decrement.
+    if( __sync_fetch_and_add( &refcnt, -1 ) == 1 ) { // atomic!
+      del_ref_delete();
+    }
+  }
 
 private:
-    // Setting noinline helps performance on AMD (Opteron 6100)
-    // but not on Intel (Core i7).
-    void del_ref_delete() __attribute__((noinline));
+  // Setting noinline helps performance on AMD (Opteron 6100)
+  // but not on Intel (Core i7).
+  void del_ref_delete() __attribute__((noinline));
 
-// protected:
+  // protected:
 public:
-    // Optimized del_ref() call for unversioned objects.
-    void nonfreeing_del_ref() {
-	assert( refcnt > 0 );
-	__sync_fetch_and_add( &refcnt, -1 ); // atomic!
-	// One may desire to call get_payload()->destruct() when the unversioned
-	// goes out of scope (in which case refcnt drops to 0). However, it is
-	// equally good to do this unconditionally in the obj_unv_instance
-	// destructor. That saves us a conditional here.
+  // Optimized del_ref() call for unversioned objects.
+  void nonfreeing_del_ref() {
+    assert( refcnt > 0 );
+    __sync_fetch_and_add( &refcnt, -1 ); // atomic!
+    // One may desire to call get_payload()->destruct() when the unversioned
+    // goes out of scope (in which case refcnt drops to 0). However, it is
+    // equally good to do this unconditionally in the obj_unv_instance
+    // destructor. That saves us a conditional here.
 
-	// TODO: with split allocation of metadata and payload, free payload
-	// or allocate payload inline in special case also?
-    }
+    // TODO: with split allocation of metadata and payload, free payload
+    // or allocate payload inline in special case also?
+  }
 
 public:
-    template<typename T>
-    obj_version<metadata_t> * rename() {
-	OBJ_PROF( rename );
-	size_t osize = size;      // Save in case del_ref() frees this
-	// TODO: could reset reduction info here: doing reduction is now
-	// redundant: if it hasn't been done already, it won't be read.
-	del_ref();                // The renamed instance no longer points here
-	return create<T>( osize, obj );   // Create a clone of ourselves
+  template<typename T>
+  obj_version<metadata_t> * rename() {
+    OBJ_PROF( rename );
+    size_t osize = size;      // Save in case del_ref() frees this
+    // TODO: could reset reduction info here: doing reduction is now
+    // redundant: if it hasn't been done already, it won't be read.
+    del_ref();                // The renamed instance no longer points here
+    return create<T>( osize, obj );   // Create a clone of ourselves
+  }
+  // bool is_renamed() const { return obj && obj->get_version() != this; }
+
+  bool is_versionable() const { return obj != 0; }
+
+  // For inout renaming
+  void copy_to( obj_version<metadata_t> * dst ) {
+    assert( size == dst->size && "Copy of obj_version with != size" );
+    memcpy( dst->get_ptr(), get_ptr(), dst->size );
+  }
+
+  // For reductions
+  template<typename Monad, typename Frame>
+  void register_callback( Frame * odt ) {
+    if( reduc.template initialize<Monad>( size, this ) ) {
+      bool do_expand = std::is_same<typename Monad::reduction_tag,
+	expensive_reduction_tag>::value;
+      odt->add_finalize_version( this, do_expand );
     }
-    // bool is_renamed() const { return obj && obj->get_version() != this; }
+  }
 
-    bool is_versionable() const { return obj != 0; }
+  template<typename Monad>
+  obj_version<MetaData> * enter_reduction( int * idxp ) {
+    return reduc.template enter<Monad>( size, this, idxp );
+  }
+  void leave_reduction( int idx ) { reduc.leave( idx ); }
+  template<typename Monad>
+  obj_reduction_md<MetaData> * get_reduction()  {
+    return reduc.get_reduction<Monad>();
+  }
 
-    // For inout renaming
-    void copy_to( obj_version<metadata_t> * dst ) {
-	assert( size == dst->size && "Copy of obj_version with != size" );
-	memcpy( dst->get_ptr(), get_ptr(), dst->size );
-    }
+  bool is_used_in_reduction() const { return reduc.is_initialized(); }
+  void set_active_reduction() { reduc.set_active(); }
 
-    // For reductions
-    template<typename Monad, typename Frame>
-    void register_callback( Frame * odt ) {
-	if( reduc.template initialize<Monad>( size, this ) ) {
-	    bool do_expand = std::is_same<typename Monad::reduction_tag,
-		expensive_reduction_tag>::value;
-	    odt->add_finalize_version( this, do_expand );
-	}
-    }
-
-    template<typename Monad>
-    obj_version<MetaData> * enter_reduction( int * idxp ) {
-	return reduc.template enter<Monad>( size, this, idxp );
-    }
-    void leave_reduction( int idx ) { reduc.leave( idx ); }
-    template<typename Monad>
-    obj_reduction_md<MetaData> * get_reduction()  {
-	return reduc.get_reduction<Monad>();
-    }
-
-    bool is_used_in_reduction() const { return reduc.is_initialized(); }
-    void set_active_reduction() { reduc.set_active(); }
-
-    // Some computations may not be complete (eg reductions). Finalize them
-    // now or expand them, depending on the complexity of the reduction
-    void finalize() { reduc.finalize( this ); }
-    void expand() { reduc.expand( this ); } 
+  // Some computations may not be complete (eg reductions). Finalize them
+  // now or expand them, depending on the complexity of the reduction
+  void finalize() { reduc.finalize( this ); }
+  void expand() { reduc.expand( this ); } 
 private:
-    template<typename Monad>
-    static void execute_reduction( obj_version<MetaData> * v ) {
-	v->reduc.template execute<Monad>( v );
-    }
+  template<typename Monad>
+  static void execute_reduction( obj_version<MetaData> * v ) {
+    v->reduc.template execute<Monad>( v );
+  }
 
 public:
-    // Debugging
-    template<typename MetaData_>
-    friend std::ostream & operator << ( std::ostream & os,
-					const obj_version<MetaData_> & v );
+  // Debugging
+  template<typename MetaData_>
+  friend std::ostream & operator << ( std::ostream & os,
+				      const obj_version<MetaData_> & v );
 };
 
 template<typename MetaData>
@@ -1261,17 +1240,17 @@ privatize( reduction<M> & obj_ext, reduction<M> & obj_int,
 // ------------------------------------------------------------------------
 template<typename MetaData, typename Task, template<class T> class DepTy>
 struct dep_traits {
-    template<typename T>
-    static inline void arg_issue( Task * fr, DepTy<T> obj_ext,
-				  typename DepTy<T>::dep_tags * sa );
-    template<typename T>
-    static inline bool arg_ini_ready( DepTy<T> obj_int );
-    // undo only required for cinoutdep
-    template<typename T>
-    static inline bool arg_ini_ready_undo( DepTy<T> obj_int );
-    template<typename T>
-    static inline void arg_release( Task * fr, DepTy<T> obj,
-				    typename DepTy<T>::dep_tags & sa );
+  template<typename T>
+  static inline void arg_issue( Task * fr, DepTy<T> obj_ext,
+				typename DepTy<T>::dep_tags * sa );
+  template<typename T>
+  static inline bool arg_ini_ready( DepTy<T> obj_int );
+  // undo only required for cinoutdep
+  template<typename T>
+  static inline bool arg_ini_ready_undo( DepTy<T> obj_int );
+  template<typename T>
+  static inline void arg_release( Task * fr, DepTy<T> obj,
+				  typename DepTy<T>::dep_tags & sa );
 };
 
 // ------------------------------------------------------------------------
@@ -1300,6 +1279,7 @@ struct release_functor {
     // obj_instance.
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
+      printf("in argument specific operator in release_functor()\n");
         typedef typename DepTy<T>::metadata_t MetaData;
 	dep_traits<MetaData, Task, DepTy>::arg_release( fr, obj_ext, sa );
 	if( !std::is_void< T >::value ) // tokens
@@ -1314,7 +1294,6 @@ struct release_functor {
     typename std::enable_if<std::is_class<M>::value, bool>::type
     operator () (reduction<M> obj_int,
 		  typename reduction<M>::dep_tags & tags ) {
-		  printf("%s\n", "object reduction");
 	typedef typename reduction<M>::metadata_t MetaData;
 	obj_version<MetaData> * v = tags.ext_version;
 	reduction<M> obj_ext = reduction<M>::create( v );
@@ -1340,11 +1319,11 @@ class grab_functor {
     obj_dep_traits * odt;
 public:
     grab_functor( Task * fr_, obj_dep_traits * odt_ )
-	: fr( fr_ ), odt( odt_ ) { printf("%s\n","In grab"); }
+	: fr( fr_ ), odt( odt_ ) { }
     
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> & obj_int, typename DepTy<T>::dep_tags & tags ) {
-      
+      printf("in grab_functor operator object.h ln 1346");
         typedef typename DepTy<T>::metadata_t MetaData;
 	DepTy<T> obj_ext = DepTy<T>::create( obj_int.get_version() );
 	// Renaming Is Impossible Here: we have already started to work
@@ -1392,7 +1371,6 @@ static inline void arg_issue_fn( Task * fr, obj_dep_traits * odt ) {
     fr->template start_registration<Tn...>();
     arg_apply_stored_fn( gfn, fr->get_task_data() );
     fr->stop_registration();
-    
 }
 #else
 // A "release function" to store inside the dep_traits.
@@ -1401,6 +1379,7 @@ static inline void arg_release_fn( Task * fr ) {
     release_functor<MetaData, Task> fn( fr );
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
+    printf("arg_apply_fn called from arg_release_fn\n");
     arg_apply_fn<release_functor<MetaData, Task>,Tn...>( fn, args, tags );
 }
 
@@ -1411,6 +1390,7 @@ static inline void arg_issue_fn( Task * fr, obj_dep_traits * odt ) {
     fr->template start_registration<Tn...>();
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
+    printf("arg_apply_fn called from arg_issue_fn\n");
     arg_apply_fn<grab_functor<MetaData,Task>,Tn...>( gfn, args, tags );
     fr->stop_registration();
 }
@@ -1534,34 +1514,34 @@ struct privatize_functor {
 template<typename MetaData>
 class finalize_functor {
 private:
-    bool do_finalize;
+  bool do_finalize;
 public:
-    finalize_functor( const task_data_t & task_data )
-	: do_finalize( task_data.is_finalization_required() ) { }
+  finalize_functor( const task_data_t & task_data )
+    : do_finalize( task_data.is_finalization_required() ) { }
 
-    template<typename T, template<typename U> class DepTy>
-    bool operator () ( DepTy<T> & obj, typename DepTy<T>::dep_tags & tags ) {
-	if( !is_outdep< DepTy<T> >::value
-	    && !is_truedep< DepTy<T> >::value // static checks
-	    && !std::is_void< T >::value // tokens are never finalized
-	    && do_finalize )
-	    obj.get_version()->finalize();
-	return true;
-    }
+  template<typename T, template<typename U> class DepTy>
+  bool operator () ( DepTy<T> & obj, typename DepTy<T>::dep_tags & tags ) {
+    if( !is_outdep< DepTy<T> >::value
+	&& !is_truedep< DepTy<T> >::value // static checks
+	&& !std::is_void< T >::value // tokens are never finalized
+	&& do_finalize )
+      obj.get_version()->finalize();
+    return true;
+  }
 #if OBJECT_REDUCTION
-    template<typename M>
-    bool operator () ( reduction<M> & obj_int, // int == ext so far
-		       typename reduction<M>::dep_tags & tags ) {
-	// Don't finalize - reduction is still going on,
-	// but do set reduction to state active, meaning we will finalize
-	// or expand it after this task!
-	obj_int.get_version()->set_active_reduction();
-	return true;
-    }
+  template<typename M>
+  bool operator () ( reduction<M> & obj_int, // int == ext so far
+		     typename reduction<M>::dep_tags & tags ) {
+    // Don't finalize - reduction is still going on,
+    // but do set reduction to state active, meaning we will finalize
+    // or expand it after this task!
+    obj_int.get_version()->set_active_reduction();
+    return true;
+  }
 #endif
 
-    template<typename T, template<typename U> class DepTy>
-    void undo( DepTy<T> & obj_ext, typename DepTy<T>::dep_tags & sa ) { }
+  template<typename T, template<typename U> class DepTy>
+  void undo( DepTy<T> & obj_ext, typename DepTy<T>::dep_tags & sa ) { }
 };
 
 // Initial ready? functor
@@ -1682,19 +1662,19 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
     fr->stop_registration( wakeup );
 };
 
-  template< typename Task>
-struct critical_path_spawn_functor {
-    
+  template< typename MetaData_, typename Task>
+  struct critical_path_task_spawn_functor {
     Task * task;
     task_data_t * parent;
         
-    critical_path_spawn_functor( Task * task_ )
+    critical_path_task_spawn_functor( Task * task_ )
       : task( task_ ) {
+
       parent = task -> get_task_data().get_task_parent();
       parent->set_end_time();
 
       unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
-      
+
       parent->set_critical_duration(parent->get_critical_duration() +
 				    parent_duration);
 
@@ -1706,14 +1686,88 @@ struct critical_path_spawn_functor {
       task->set_critical_duration(parent->get_critical_duration());
 
       task->get_task_data().task_depth = parent->task_depth + 1;
-      /*printf("starting | id: %lu ", task->get_task_data().id);
+      printf("starting | id: %lu ", task->get_task_data().id);
       printf("pcd: %7lu | ", parent->get_critical_duration());
+      printf("pd: %7lu | ", parent_duration);
       printf("pccd: %7lu | ", parent->get_task_data().get_child_critical_duration());
       printf("pid: %lu ", parent->get_task_data().id);
-      printf("| d: %d\n", task->get_task_data().task_depth);*/
+      printf("| d: %d\n", task->get_task_data().task_depth);
     }
+
+     // In the default case, the internal obj_instance equals the external
+    // obj_instance.
+    template<typename T, template<typename U> class DepTy>
+    bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
+        typedef typename DepTy<T>::metadata_t MetaData;
+	
+	if( !std::is_void< T >::value ){
+	  MetaData_* obj_version = obj_ext.get_version()->get_metadata();
+	  printf("Spawned task has an object dep with id: %lu\n", obj_version->get_id());
+	  unsigned long task_critical_duration = task->get_task_data().get_critical_duration();
+	  unsigned long obj_critical_duration = obj_version->get_critical_duration();
+	  if(obj_critical_duration > task_critical_duration)
+	    {
+	      task->get_task_data().set_critical_duration(obj_critical_duration);
+	    }
+	}
+	return true;
+    }
+    
+    
+
+        template<typename T>
+    bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
+	  MetaData_* obj_version = obj.get_version()->get_metadata();
+	  printf("Spawned task has an object dep with id: %lu\n", obj_version->get_id());
+	  unsigned long task_critical_duration = task->get_task_data().get_critical_duration();
+	  unsigned long obj_critical_duration = obj_version->get_critical_duration();
+	  if(obj_critical_duration > task_critical_duration)
+	    {
+	      task->get_task_data().set_critical_duration(obj_critical_duration);
+	    }
+	  return true;	
+	}
+
+    //seperate override for outdep as it won't be required wait until the task is ready (check this)
+     template<typename T>
+  bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
+    return true;
+    } 
+
   };
 
+  template< typename Task>
+struct critical_path_spawn_functor {
+    
+    Task * task;
+    task_data_t * parent;
+        
+    critical_path_spawn_functor( Task * task_ ) : task( task_ ) {
+
+      parent = task -> get_task_data().get_task_parent();
+      parent->set_end_time();
+
+      unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
+
+      parent->set_critical_duration(parent->get_critical_duration() +
+				    parent_duration);
+
+      /*if(parent -> get_critical_duration() < parent -> get_child_critical_duration())
+	parent -> set_critical_duration(parent -> get_child_critical_duration());*/
+
+      parent->set_work_done(parent->get_work_done() + parent_duration);
+
+      task->set_critical_duration(parent->get_critical_duration());
+
+      task->get_task_data().task_depth = parent->task_depth + 1;
+      printf("starting | id: %lu ", task->get_task_data().id);
+      printf("pcd: %7lu | ", parent->get_critical_duration());
+      printf("pd: %7lu | ", parent_duration);
+      printf("pccd: %7lu | ", parent->get_task_data().get_child_critical_duration());
+      printf("pid: %lu ", parent->get_task_data().id);
+      printf("| d: %d\n", task->get_task_data().task_depth);
+    }
+  };
 
 // A function to record the critical path of tasks on their spawn.
   template<typename Task>
@@ -1721,13 +1775,21 @@ struct critical_path_spawn_functor {
     critical_path_spawn_functor<Task> cfn( task );
   }
 
+ template<typename MetaData, typename Task, typename... Tn>
+  static inline void critical_path_task_spawn( Task * fr) {
+   critical_path_task_spawn_functor<MetaData, Task> fn( fr );
+   char * args = fr->get_task_data().get_args_ptr();
+   char * tags = fr->get_task_data().get_tags_ptr();
+   printf("arg_apply_fn called from critical_path_task_spawn\n");
+   arg_apply_fn<critical_path_task_spawn_functor<MetaData, Task>,Tn...>( fn, args, tags );  
+ }
+
 //A function to record the critical path of tasks when they end
-template<typename Task>
+  template<typename MetaData_, typename Task>
 struct critical_path_task_end_functor {
     
   Task * fr;
   task_data_t * pr;
-
 
   critical_path_task_end_functor( Task * task)
     : fr( task )
@@ -1737,18 +1799,20 @@ struct critical_path_task_end_functor {
     fr->get_task_data().set_end_time();
 
     // Set parent
-    task_data_t * pr = fr->get_task_data().get_task_parent();
+    pr = fr->get_task_data().get_task_parent();
 
     unsigned long task_duration = 
       (
        fr->get_task_data().get_end_time() - 
-       fr->get_task_data().get_start_time());
+       fr->get_task_data().get_start_time()
+       );
 
     // calculate the amount of work done by the task
     fr->get_task_data().set_work_done
       (
        fr->get_task_data().get_work_done() +
-       task_duration );
+       task_duration 
+       );
 
     // accumulate the work done from the task into the parent
     pr->get_task_data().mutex.lock();
@@ -1764,8 +1828,10 @@ struct critical_path_task_end_functor {
     fr->get_task_data().set_critical_duration
       (
        fr->get_task_data().get_critical_duration() +
-       task_duration);
+       task_duration
+       );
 
+    // get the critical duration of a given task
     if(fr->get_task_data().get_critical_duration() < 
        (temp = fr->get_task_data().get_child_critical_duration()))
       {
@@ -1774,24 +1840,22 @@ struct critical_path_task_end_functor {
  
     pr->get_task_data().mutex.lock();
 
-
-    // If the task has been spawned then compare with the
+    if(!fr->get_task_data().get_spawned()){
+      // if the task hasn't been spawned then add the duration directly onto the parent's
+      // critical path
+      pr->get_task_data().set_critical_duration
+	(
+	 pr->get_task_data().get_critical_duration()
+	 + fr->get_task_data().get_critical_duration()
+	 );
+    }
+    // If the task hasn't been spawned then compare with the
     // parent's child critical duration
     if(pr->get_task_data().get_child_critical_duration() < 
        (temp = fr->get_task_data().get_critical_duration()))
       {
 	pr->set_child_critical_duration(temp);
       }
-
-    if(!fr->get_task_data().get_spawned()){
-      // If the task hasn't been spawned then add the duration directly onto the parent's
-      // critical path
-      pr->get_task_data().set_critical_duration
-	(
-	 pr->get_task_data().get_critical_duration()
-	 + task_duration
-	 );
-    }
       
     pr->get_task_data().mutex.unlock();
 
@@ -1803,49 +1867,52 @@ struct critical_path_task_end_functor {
     printf("cdir: %7lu | ", fr->get_task_data().get_critical_duration());
     //printf("wd: %7lu | ", fr->get_task_data().get_work_done());
     //printf("pwd: %7lu | ", pr->get_task_data().get_work_done());
-    printf("ccdir: %7lu | ", fr->get_task_data().get_child_critical_duration());
+    printf("pccdir: %7lu | ", pr->get_task_data().get_child_critical_duration());
+    printf("pid: %7lu | ", pr->get_task_data().id);
     printf("d: %d\n", fr->get_task_data().task_depth);
   }
 
-  template<typename T>
-  bool operator () ( indep<T> & obj, typename indep<T>::dep_tags & sa ) {
-    printf("FUNCTOR CALL: indep applied to object***\n");
-    //MetaData object_metadata = obj.get_version()->get_metadata();
-    return true;
-  }
+    template<typename T, template<typename U> class DepTy>
+    bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
+	return true;
+    }
 
-  template<typename T, template<typename U> class DepTy>
+  template<typename T>
   bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
+    MetaData_* obj_version = obj.get_version()->get_metadata();
+    unsigned long task_critical_duration = fr->get_task_data().get_critical_duration();
+    unsigned long obj_critical_duration = obj_version->get_critical_duration();
+
+    if(task_critical_duration > obj_critical_duration)
+      obj_version->set_critical_duration( task_critical_duration );
+ 
+    printf("Outdep object critical duration set to: %lu\n", obj_version->get_critical_duration());
     return true;
   } 
 
-  template<typename T, template<typename U> class DepTy>
+  template<typename T>
   bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
+    MetaData_* obj_version = obj.get_version()->get_metadata();
+    unsigned long task_critical_duration = fr->get_task_data().get_critical_duration();
+    unsigned long obj_critical_duration = obj_version->get_critical_duration();
+
+    if(task_critical_duration > obj_critical_duration)
+      obj_version->set_critical_duration( task_critical_duration );
+ 
+    printf("inoutdep object critical duration set to: %lu\n", obj_version->get_critical_duration());
     return true;
   } 
-#if OBJECT_COMMUTATIVITY
-  template<typename T>
-  bool operator () ( cinoutdep<T> & obj, typename cinoutdep<T>::dep_tags & sa ) {
-    return true;
-  }
-#endif
-#if OBJECT_REDUCTION
-  template<typename T>
-  bool operator () ( reduction<T> & obj, typename reduction<T>::dep_tags & sa ) {
-    return true;
-  }
-#endif
 
 };
 
-  template<typename Task, typename... Tn>
-  static inline void critical_path_task_end( Task * task){
-    printf("FUNCTOR CALL: critical_path_task_end with Tn...\n");
-    critical_path_task_end_functor<Task> task_end_f(task);
-    char * args = task->get_task_data().get_args_ptr();
-    char * tags = task->get_task_data().get_tags_ptr();
-    arg_apply_fn<critical_path_task_end_functor<Task>,Tn...>( task_end_f, args, tags );
-  }
+  template<typename MetaData, typename Task, typename... Tn>
+  static inline void critical_path_task_end( Task * fr) {
+    critical_path_task_end_functor<MetaData, Task> fn( fr );
+    char * args = fr->get_task_data().get_args_ptr();
+    char * tags = fr->get_task_data().get_tags_ptr();
+    printf("arg_apply_fn called from critical_path_task_end\n");
+    arg_apply_fn<critical_path_task_end_functor<MetaData, Task>,Tn...>( fn, args, tags );  
+}
 
 #if STORED_ANNOTATIONS
   // A "ini_ready function" to test readiness of objects at spawn-time.
@@ -1995,22 +2062,27 @@ struct critical_path_task_end_functor {
 	  = stack_frame_traits<Frame>::get_metadata( fr );
 	typename stack_frame_traits<StackFrame>::metadata_ty * opr
 	  = stack_frame_traits<StackFrame>::get_metadata( parent );
-	ofr->enable_deps( true
+	ofr->enable_deps
+	  ( 
+	   true
 #if !STORED_ANNOTATIONS
-			  , (void(*)(Task *, obj_dep_traits *))0
-			  , &arg_release_fn<MetaData,Task,Tn...>
+	   , (void(*)(Task *, obj_dep_traits *))0
+	   , &arg_release_fn<MetaData,Task,Tn...>
+	   , &critical_path_task_end<MetaData, Task, Tn...>
 #endif
-			  );
-	ofr->template create< Tn...>(
-				     get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
+	    );
+	ofr->template create< Tn...>
+	  (
+	   get_full_task<StackFrame, FullFrame, FullTask >( parent ) 
+	   );
 
-	task_data_t parent_task_data = opr->get_task_data();
-	ofr -> get_task_data().set_task_parent( &parent_task_data );
+	//task_data_t parent_task_data = opr->get_task_data();
+	//ofr -> get_task_data().set_task_parent( &parent_task_data );
 
 	arg_dgrab_fn<MetaData, Task, Tn...>(
 					    ofr, opr, std::is_same<Frame,pending_frame>::value, an... );
-	printf("called from arg_issue when object count > 0\n");
-	critical_path_task<Task>(ofr);
+	//critical_path_task<Task>(ofr);
+	critical_path_task_spawn<MetaData, Task, Tn...>(ofr);
       } else {
 	// errs() << "grab later " << fr << "\n";
 	typename stack_frame_traits<Frame>::metadata_ty * ofr
@@ -2019,8 +2091,10 @@ struct critical_path_task_end_functor {
 #if !STORED_ANNOTATIONS
 			  , &arg_issue_fn<MetaData,Task,Tn...>
 			  , &arg_release_fn<MetaData,Task,Tn...>
+			  , &critical_path_task_end<MetaData, Task, Tn...>
 #endif
 			  );
+
 	ofr->template create<Tn...>(
 				    get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
       }
@@ -2584,104 +2658,111 @@ public:
 // frames.
 // ------------------------------------------------------------------------
 class obj_dep_traits {
-    typedef void (*issue_fn_t)( task_metadata *, obj_dep_traits * );
-    typedef void (*release_fn_t)( task_metadata * );
+  typedef void (*issue_fn_t)( task_metadata *, obj_dep_traits * );
+  typedef void (*release_fn_t)( task_metadata * );
+  typedef void (*critical_path_end_fn_t)( task_metadata * );
 
-    enum state_t {
-	s_nodep,
-	s_issued,
-	s_notissued
-    };
+  enum state_t {
+    s_nodep,
+    s_issued,
+    s_notissued
+  };
 #if !STORED_ANNOTATIONS
-    issue_fn_t issue_fn;
-    release_fn_t release_fn;
+  issue_fn_t issue_fn;
+  release_fn_t release_fn;
+  critical_path_end_fn_t critical_path_end_fn;
 #endif
-    state_t state;
-    bool pad[7]; // this padding is here because inherited_size<> does not work
+  state_t state;
+  bool pad[7]; // this padding is here because inherited_size<> does not work
 
-    typedef obj::obj_version<obj::obj_metadata> obj_version;
-    std::vector<obj_version *> finalize[2];
+  typedef obj::obj_version<obj::obj_metadata> obj_version;
+  std::vector<obj_version *> finalize[2];
 
 protected:
-    // Only initialize task_data_p. If task_data_p is non-zero, then other
-    // fields must also be initialized.
-    obj_dep_traits() : state( s_nodep ) { }
+  // Only initialize task_data_p. If task_data_p is non-zero, then other
+  // fields must also be initialized.
+  obj_dep_traits() : state( s_nodep ) { }
 
-    // Initialize from pending frame
-    void create_from_pending( obj_dep_traits * odt ) {
+  // Initialize from pending frame
+  void create_from_pending( obj_dep_traits * odt ) {
 #if !STORED_ANNOTATIONS
-	release_fn = odt->release_fn;
+    release_fn = odt->release_fn;
+    critical_path_end_fn = odt->critical_path_end_fn;
 #endif
-	state = s_issued;
-	finalize[0].swap( odt->finalize[0] );
-	finalize[1].swap( odt->finalize[1] );
-    }
+    state = s_issued;
+    finalize[0].swap( odt->finalize[0] );
+    finalize[1].swap( odt->finalize[1] );
+  }
 
 public:
-    void release_deps( task_metadata * fr ) {
-	if( enabled() ) {
+  void release_deps( task_metadata * fr ) {
+    if( enabled() ) {
 #if STORED_ANNOTATIONS
-	    arg_release_fn<obj_metadata,task_metadata>( fr );
+      arg_release_fn<obj_metadata,task_metadata>( fr );
 #else
-	    (*release_fn)( fr );
+      (*critical_path_end_fn)( fr );
+      (*release_fn)( fr );
+      printf("release_deps called for %lu\n", fr->id);
 #endif
-	}
     }
+  }
 
-    void enable_deps( bool already_enabled
+  void enable_deps( bool already_enabled
 #if !STORED_ANNOTATIONS
-		      , issue_fn_t grfn
-		      , release_fn_t refn
+		    , issue_fn_t grfn
+		    , release_fn_t refn
+		    , critical_path_end_fn_t cpefn
 #endif
-	) {
+		    ) {
 #if !STORED_ANNOTATIONS
-	issue_fn = grfn;
-	release_fn = refn;
+    issue_fn = grfn;
+    release_fn = refn;
+    critical_path_end_fn = cpefn;
 #endif
-	state = already_enabled ? s_issued : s_notissued;
-    }
+    state = already_enabled ? s_issued : s_notissued;
+  }
 
-    void convert_to_full( task_metadata * fr, obj_dep_traits * parent ) {
-	// do we have arguments with dependencies?
-	if( state == s_notissued ) {
+  void convert_to_full( task_metadata * fr, obj_dep_traits * parent ) {
+    // do we have arguments with dependencies?
+    if( state == s_notissued ) {
 #if STORED_ANNOTATIONS
-	    arg_issue_fn<obj_metadata, task_metadata>( fr, parent );
+      arg_issue_fn<obj_metadata, task_metadata>( fr, parent );
 #else
-	    (*issue_fn)( fr, parent );
+      (*issue_fn)( fr, parent );
 #endif
-	    state = s_issued;
-	}
+      state = s_issued;
     }
+  }
 
-    bool enabled() const { return state == s_issued; }
+  bool enabled() const { return state == s_issued; }
 
-    void add_finalize_version( obj_version * v, bool tasking ) {
-	// errs() << "add_finalize " << v << "\n";
-	v->add_ref();
-	finalize[tasking].push_back( v );
-    }
-    void run_finalizers( bool tasking ) {
-	// errs() << "run_finalizers tasking=" << tasking << "\n";
+  void add_finalize_version( obj_version * v, bool tasking ) {
+    // errs() << "add_finalize " << v << "\n";
+    v->add_ref();
+    finalize[tasking].push_back( v );
+  }
+  void run_finalizers( bool tasking ) {
+    // errs() << "run_finalizers tasking=" << tasking << "\n";
 #if OBJECT_REDUCTION
-	if( tasking ) {
-	    for( auto I=finalize[1].begin(), E=finalize[1].end(); I != E; ++I ) {
-		obj_version * v = *I;
-		// errs() << "expand " << *I << "\n";
-		v->expand();
-		v->del_ref();
-	    }
-	    finalize[1].clear();
-	} else {
-	    for( auto I=finalize[0].begin(), E=finalize[0].end(); I != E; ++I ) {
-		obj_version * v = *I;
-		// errs() << "finalize " << *I << "\n";
-		v->finalize();
-		v->del_ref();
-	    }
-	    finalize[0].clear();
-	}
-#endif
+    if( tasking ) {
+      for( auto I=finalize[1].begin(), E=finalize[1].end(); I != E; ++I ) {
+	obj_version * v = *I;
+	// errs() << "expand " << *I << "\n";
+	v->expand();
+	v->del_ref();
+      }
+      finalize[1].clear();
+    } else {
+      for( auto I=finalize[0].begin(), E=finalize[0].end(); I != E; ++I ) {
+	obj_version * v = *I;
+	// errs() << "finalize " << *I << "\n";
+	v->finalize();
+	v->del_ref();
+      }
+      finalize[0].clear();
     }
+#endif
+  }
 };
 
 // Attach state and functionality to pending_frame
@@ -2746,7 +2827,7 @@ struct task_graph_traits {
     release_task( StackFrame * fr ) {
 	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr );
-	critical_path_task_end( ofr );
+	//obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
 	assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
     }
@@ -2754,7 +2835,7 @@ struct task_graph_traits {
     release_task( PendingFrame * fr ) {
 	typename stack_frame_traits<PendingFrame>::metadata_ty * ofr
 	    = stack_frame_traits<PendingFrame>::get_metadata( fr );
-	critical_path_task_end( ofr );
+	//obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
 	assert( ofr->enabled() );
 	ofr->release_deps( ofr );
     }
@@ -2762,7 +2843,7 @@ struct task_graph_traits {
     release_task_and_get_ready( FullFrame * fr ) {
        typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr->get_frame() );
-       critical_path_task_end(ofr);
+       //obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
        typename stack_frame_traits<FullFrame>::metadata_ty * opf
 	    = stack_frame_traits<FullFrame>::get_metadata( fr->get_parent() );
 	// assert( !ofr->enabled() || fr->get_parent()->is_full() );

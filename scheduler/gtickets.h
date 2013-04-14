@@ -43,6 +43,8 @@
 #include "lfllist.h"
 #include "lock.h"
 
+#include "../util/pp_time.h"
+
 namespace obj {
 
 // The type holding the depth of an object in the task graph.
@@ -200,6 +202,8 @@ private:
     cas_mutex mutex;              // ensure exclusion on commutative operations
 #endif
     depth_t depth;                // depth in task graph
+  double critical_duration;
+  double id;
 
 public:
     gtkt_metadata() : last_writer( -1 ), last_reader( -1 ),
@@ -273,6 +277,12 @@ public:
 	assert( depth <= d );
 	depth = d;
     }
+
+  double get_critical_duration() { return critical_duration; }
+  void set_critical_duration( double cd ){ critical_duration = cd; }
+  
+  double get_id() { return id; }
+  void set_id() { id = time_pp(); }
 
     friend std::ostream & operator << ( std::ostream & os, const gtkt_metadata & md );
 };

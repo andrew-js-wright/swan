@@ -197,7 +197,7 @@ public:
 		   task_data_t * p_)
 	: cresult( cr_ ), func( func_ ), stub( stub_ )
 	{
-	  get_task_data().initialize( as_, ts_, fts_, nargs_, p_ );
+	  get_task_data().initialize( as_, ts_, fts_, nargs_, p_, true );
 	    static_assert( (sizeof(*this) % CACHE_ALIGNMENT) == 0,
 			   "Padding of pending_frame failed" );
 	}
@@ -395,7 +395,7 @@ public:
 	static_assert( (sizeof(stack_frame_base) & 7) == 0,
 		       "stack_frame_base alignment" );
 	// give the dummy a null parent
-	get_task_data().initialize( 0, 0, 0, end_of_stack, nargs_, NULL );
+	get_task_data().initialize( 0, 0, 0, end_of_stack, nargs_, NULL, !call_ );
     }
     // Executing frame constructor
 #if STORED_ANNOTATIONS
@@ -409,7 +409,7 @@ public:
 		      size_t nargs_, stack_frame * parent_, 
 		      spawn_deque * owner_, bool call_ )
 	: call( call_ ), ff( 0 ), parent( parent_ ), owner( owner_ ) {
-      get_task_data().initialize( as_, ts_, fts_, end_of_stack, nargs_,get_task_data_pre_stack_frame<stack_frame *>( parent_ ));
+      get_task_data().initialize( as_, ts_, fts_, end_of_stack, nargs_,get_task_data_pre_stack_frame<stack_frame *>( parent_ ), !call);
     }
 #endif
     // Conversion from pending_frame

@@ -199,7 +199,7 @@ public:
 	    delete[] arg_buf;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
-		     size_t nargs_, task_data_t * parent_ ) {
+		     size_t nargs_, task_data_t * parent_, bool spawned_ ){
 	fn_tags_size = (fn_tags_size+15) & ~15;
 	arg_buf = new char[((args_size+15)&~15)+fn_tags_size+tags_size];
 	args = &arg_buf[0];
@@ -211,15 +211,16 @@ public:
 	req_fin = false;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
-	parent = parent_;
 	critical_duration = 0;
+	child_critical_duration = 0;
 	start_time = pp_time();
 	task_depth = 0;
 	id = pp_time();
-	spawned = false;
+	spawned = spawned_;
+	parent = parent_;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
-		     char * end_of_stack, size_t nargs_, task_data_t * parent_ ) {
+		     char * end_of_stack, size_t nargs_, task_data_t * parent_, bool spawned_ ){
       arg_buf = 0;
 #if STORED_ANNOTATIONS
 	nargs = nargs_;
@@ -240,7 +241,7 @@ public:
 	id = pp_time();
 	child_critical_duration = 0;
 	work_done = 0;
-	spawned = false;
+	spawned = spawned_;
     }
     void initialize( task_data_t & data ) {
 	arg_buf = data.arg_buf;
@@ -310,10 +311,8 @@ public:
   void set_child_critical_duration(unsigned long cd) { child_critical_duration = cd; }
   unsigned long get_child_critical_duration() { return child_critical_duration; }
   
-  void set_task_parent(task_data_t * p) { parent = p; }
   task_data_t * get_task_parent() { return parent; }
 
-  void set_spawned() { spawned = true; }
   bool get_spawned() { return spawned; }
 };
 

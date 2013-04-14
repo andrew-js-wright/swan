@@ -583,9 +583,7 @@ run( TR (*func)( Tn... ), Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-  printf("spawn call 1\n");
   stack_frame * fr = stack_frame::my_stack_frame();
-  fr->get_task_data().set_spawned();
   if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
     stack_frame::invoke( &ch.get_future(), false, func, args... );
   } else {
@@ -597,8 +595,6 @@ template<typename TR, typename... Tn>
 inline typename std::enable_if<std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), Tn... args ) {
   stack_frame * fr = stack_frame::my_stack_frame();
-  fr->get_task_data().set_spawned();
-  printf("spawn call %lu\n", fr->get_task_data().id);
   if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
     stack_frame::invoke( (future*)0, false, func, args... );
   } else {
@@ -609,9 +605,7 @@ spawn( TR (*func)( Tn... ), Tn... args ) {
 template<typename TR, typename... Tn>
 inline typename std::enable_if<!std::is_void<TR>::value>::type
 spawn( TR (*func)( Tn... ), chandle<TR> & ch, Tn... args ) {
-  printf("spawn call 3\n");
     stack_frame * fr = stack_frame::my_stack_frame();
-  fr->get_task_data().set_spawned();
     if( /*!fr->is_full() ||*/ wf_arg_ready( fr->get_full(), args... ) ) {
 	stack_frame::invoke( &ch.get_future(), false, func, args... );
     } else {

@@ -490,7 +490,7 @@ worker_state::worker_fn() {
 	stack_frame * child_fr = child->get_frame();
 	if(parent->get_frame()->get_state() == fs_dummy)
 	  {
-	    critical_path_task_end(child_fr->get_metadata());
+	    obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( child_fr->get_metadata() );
 	    printf("Total work done is: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
 	    printf("Critical duration is: %lu | depth: %d\n", child_fr->get_metadata()->get_task_data().get_critical_duration(), child_fr->get_metadata()->get_task_data().task_depth);
 	    printf("Parallelism: %6.3f\n",((double)child_fr->get_metadata()->get_task_data().get_work_done()/(double)child_fr->get_metadata()->get_task_data().get_critical_duration()));

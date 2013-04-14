@@ -42,7 +42,7 @@ void task0( outdep<int> out ) {
 
 void task1( indep<int> in ) {
     printf( "Task 1 start %p\n", in.get_version() );
-    sleep(1);
+    sleep(5);
     printf( "Task 1 done %p\n", in.get_version() );
 }
 
