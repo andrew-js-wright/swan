@@ -243,7 +243,7 @@ public:
 	work_done = 0;
 	spawned = spawned_;
     }
-    void initialize( task_data_t & data ) {
+  void initialize( task_data_t & data, bool spawned_ ) {
 	arg_buf = data.arg_buf;
 	args = data.args;
 	tags = data.tags;
@@ -259,7 +259,7 @@ public:
 	critical_duration = 0;
 	child_critical_duration = 0;
 	work_done = 0;
-	spawned = false;
+	spawned = spawned;
     }
 
     char * get_args_ptr() const { return args; }

@@ -1279,7 +1279,6 @@ struct release_functor {
     // obj_instance.
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
-      printf("in argument specific operator in release_functor()\n");
         typedef typename DepTy<T>::metadata_t MetaData;
 	dep_traits<MetaData, Task, DepTy>::arg_release( fr, obj_ext, sa );
 	if( !std::is_void< T >::value ) // tokens
@@ -1323,7 +1322,6 @@ public:
     
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> & obj_int, typename DepTy<T>::dep_tags & tags ) {
-      printf("in grab_functor operator object.h ln 1346");
         typedef typename DepTy<T>::metadata_t MetaData;
 	DepTy<T> obj_ext = DepTy<T>::create( obj_int.get_version() );
 	// Renaming Is Impossible Here: we have already started to work
@@ -1379,7 +1377,6 @@ static inline void arg_release_fn( Task * fr ) {
     release_functor<MetaData, Task> fn( fr );
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
-    printf("arg_apply_fn called from arg_release_fn\n");
     arg_apply_fn<release_functor<MetaData, Task>,Tn...>( fn, args, tags );
 }
 
@@ -1390,7 +1387,6 @@ static inline void arg_issue_fn( Task * fr, obj_dep_traits * odt ) {
     fr->template start_registration<Tn...>();
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
-    printf("arg_apply_fn called from arg_issue_fn\n");
     arg_apply_fn<grab_functor<MetaData,Task>,Tn...>( gfn, args, tags );
     fr->stop_registration();
 }
@@ -1690,8 +1686,8 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
       printf("pcd: %7lu | ", parent->get_critical_duration());
       printf("pd: %7lu | ", parent_duration);
       printf("pccd: %7lu | ", parent->get_task_data().get_child_critical_duration());
-      printf("pid: %lu ", parent->get_task_data().id);
-      printf("| d: %d\n", task->get_task_data().task_depth);
+      printf("pid: %lu | ", parent->get_task_data().id);
+      printf("d: %d | ", task->get_task_data().task_depth);
     }
 
      // In the default case, the internal obj_instance equals the external
@@ -1702,85 +1698,47 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	
 	if( !std::is_void< T >::value ){
 	  MetaData_* obj_version = obj_ext.get_version()->get_metadata();
-	  printf("Spawned task has an object dep with id: %lu\n", obj_version->get_id());
 	  unsigned long task_critical_duration = task->get_task_data().get_critical_duration();
 	  unsigned long obj_critical_duration = obj_version->get_critical_duration();
 	  if(obj_critical_duration > task_critical_duration)
 	    {
 	      task->get_task_data().set_critical_duration(obj_critical_duration);
 	    }
+
+	  printf("objty: in/gen | objcd: %lu", obj_critical_duration);
 	}
 	return true;
-    }
-    
-    
+    }   
 
         template<typename T>
     bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
 	  MetaData_* obj_version = obj.get_version()->get_metadata();
-	  printf("Spawned task has an object dep with id: %lu\n", obj_version->get_id());
 	  unsigned long task_critical_duration = task->get_task_data().get_critical_duration();
 	  unsigned long obj_critical_duration = obj_version->get_critical_duration();
 	  if(obj_critical_duration > task_critical_duration)
 	    {
 	      task->get_task_data().set_critical_duration(obj_critical_duration);
 	    }
+	  
+	  printf("objty: inout | objcd: %lu", obj_critical_duration);
 	  return true;	
 	}
 
     //seperate override for outdep as it won't be required wait until the task is ready (check this)
      template<typename T>
   bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
-    return true;
+       printf("objty: in/gen | objcd: %lu", obj_critical_duration);
+       return true;
     } 
 
   };
 
-  template< typename Task>
-struct critical_path_spawn_functor {
-    
-    Task * task;
-    task_data_t * parent;
-        
-    critical_path_spawn_functor( Task * task_ ) : task( task_ ) {
-
-      parent = task -> get_task_data().get_task_parent();
-      parent->set_end_time();
-
-      unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
-
-      parent->set_critical_duration(parent->get_critical_duration() +
-				    parent_duration);
-
-      /*if(parent -> get_critical_duration() < parent -> get_child_critical_duration())
-	parent -> set_critical_duration(parent -> get_child_critical_duration());*/
-
-      parent->set_work_done(parent->get_work_done() + parent_duration);
-
-      task->set_critical_duration(parent->get_critical_duration());
-
-      task->get_task_data().task_depth = parent->task_depth + 1;
-      printf("starting | id: %lu ", task->get_task_data().id);
-      printf("pcd: %7lu | ", parent->get_critical_duration());
-      printf("pd: %7lu | ", parent_duration);
-      printf("pccd: %7lu | ", parent->get_task_data().get_child_critical_duration());
-      printf("pid: %lu ", parent->get_task_data().id);
-      printf("| d: %d\n", task->get_task_data().task_depth);
-    }
-  };
-
 // A function to record the critical path of tasks on their spawn.
-  template<typename Task>
-  static inline void critical_path_task(Task * task ) {
-    critical_path_spawn_functor<Task> cfn( task );
-  }
-
- template<typename MetaData, typename Task, typename... Tn>
+  template<typename MetaData, typename Task, typename... Tn>
   static inline void critical_path_task_spawn( Task * fr) {
    critical_path_task_spawn_functor<MetaData, Task> fn( fr );
    char * args = fr->get_task_data().get_args_ptr();
    char * tags = fr->get_task_data().get_tags_ptr();
-   printf("arg_apply_fn called from critical_path_task_spawn\n");
    arg_apply_fn<critical_path_task_spawn_functor<MetaData, Task>,Tn...>( fn, args, tags );  
  }
 
@@ -1869,11 +1827,12 @@ struct critical_path_task_end_functor {
     //printf("pwd: %7lu | ", pr->get_task_data().get_work_done());
     printf("pccdir: %7lu | ", pr->get_task_data().get_child_critical_duration());
     printf("pid: %7lu | ", pr->get_task_data().id);
-    printf("d: %d\n", fr->get_task_data().task_depth);
+    printf("d: %d", fr->get_task_data().task_depth);
   }
 
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
+      printf(" | objty: inout | objcd: %lu ", obj_ext.get_version()->get_metadata()->get_critical_duration());
 	return true;
     }
 
@@ -1886,7 +1845,7 @@ struct critical_path_task_end_functor {
     if(task_critical_duration > obj_critical_duration)
       obj_version->set_critical_duration( task_critical_duration );
  
-    printf("Outdep object critical duration set to: %lu\n", obj_version->get_critical_duration());
+    printf(" | objty: out | objcd: %lu ", obj_version->get_critical_duration());
     return true;
   } 
 
@@ -1899,7 +1858,7 @@ struct critical_path_task_end_functor {
     if(task_critical_duration > obj_critical_duration)
       obj_version->set_critical_duration( task_critical_duration );
  
-    printf("inoutdep object critical duration set to: %lu\n", obj_version->get_critical_duration());
+    printf(" | objty: inout | objcd: %lu ", obj_version->get_critical_duration());
     return true;
   } 
 
@@ -1910,8 +1869,8 @@ struct critical_path_task_end_functor {
     critical_path_task_end_functor<MetaData, Task> fn( fr );
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
-    printf("arg_apply_fn called from critical_path_task_end\n");
     arg_apply_fn<critical_path_task_end_functor<MetaData, Task>,Tn...>( fn, args, tags );  
+    printf("\n");
 }
 
 #if STORED_ANNOTATIONS
@@ -2702,7 +2661,6 @@ public:
 #else
       (*critical_path_end_fn)( fr );
       (*release_fn)( fr );
-      printf("release_deps called for %lu\n", fr->id);
 #endif
     }
   }

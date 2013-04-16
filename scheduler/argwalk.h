@@ -100,7 +100,6 @@ inline Tfdep * get_fn_tags( char * tags ) {
 template<typename Fn, typename T>
 inline typename std::enable_if<!is_object<T>::value, bool>::type
 apply_functor( Fn &, char * __restrict__, char * __restrict__ ) {   
-  printf("In apply_functor 1\n"); 
   return true; 
 }
 
@@ -108,7 +107,6 @@ template<typename Fn, typename T>
 inline typename std::enable_if<is_object<T>::value
 			       && !is_outdep<T>::value, bool>::type
 apply_functor( Fn & fn, char * __restrict__ argp, char * __restrict__ tagp ) {
-  printf("In apply_functor 2\n");
     return fn( *reinterpret_cast<T*>( argp ),
 	       *reinterpret_cast<typename T::dep_tags *>( tagp ) );
 }
@@ -116,7 +114,6 @@ apply_functor( Fn & fn, char * __restrict__ argp, char * __restrict__ tagp ) {
 template<typename Fn, typename T>
 inline typename std::enable_if<is_outdep<T>::value, bool>::type
 apply_functor( Fn & fn, char * __restrict__ argp, char * __restrict__ tagp ) {
-    printf("In apply_functor 3 [outdep]\n");
     T * obj = reinterpret_cast<T*>( argp );
     if( likely( obj->get_version()->is_versionable() ) )
 	return fn( *reinterpret_cast<T*>( argp ),
@@ -712,20 +709,17 @@ static inline bool arg_apply3_fn( Fn & fn, size_t (*off)(size_t), char * __restr
 // ------------------------------------------------------------------------
 template<typename Fn, typename AL>
 static inline bool arg_apply_fnr( Fn & fn, AL al, char * __restrict__ a, char * __restrict__ s ) {
-  printf("In arg_apply_fnr 1\n");
   return true;
 }
 
 template<typename Fn, typename AL, typename T>
 static inline bool arg_apply_fnr( Fn & fn, AL al, char * __restrict__ a, char * __restrict__ s ) {
-    printf("In arg_apply_fnr 2\n");
     return apply_functor<Fn,T>( fn, a+al.template get<T>(), s );
 }
 
 template<typename Fn, typename AL, typename T, typename T1, typename... Tn>
 static inline bool arg_apply_fnr( Fn & fn, AL al, char * __restrict__ a, char * __restrict__ s ) {
     typedef typename AL::template arg_locator_next<T>::type AL_next;
-    printf("In arg_apply_fnr 3\n");
     return apply_functor<Fn,T>( fn, a+al.template get<T>(), s )
 	&& arg_apply_fnr<Fn,AL_next,T1,Tn...>( fn, al.template step<T>(), a, s+arg_stored_size<T>() );
 }

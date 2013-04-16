@@ -416,7 +416,7 @@ public:
     stack_frame_base( task_data_t & data_, char * end_of_stack,
 		      stack_frame * parent_, spawn_deque * owner_, bool call_ )
 	: call( call_ ), ff( 0 ), parent( parent_ ), owner( owner_ ) {
-      get_task_data().initialize( data_ );
+      get_task_data().initialize( data_, !call_ );
     }
     inline ~stack_frame_base();
 
