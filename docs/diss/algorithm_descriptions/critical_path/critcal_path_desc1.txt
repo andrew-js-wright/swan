@@ -1,0 +1,32 @@
+when each task is ready to execute (arg_issue):
+
+     calculate parent's duration
+     calculate parent's work done [p.wd + duration]
+     calculate parent's critical path [p.cp + duration]     
+
+     assign task's work done = parent's work done
+     assign task's critcial path = parent's critical path
+
+     if task has in/out dependee objects:
+     	set task's critcal path = max critical path of dependee objects
+
+when each task is finished executing (arg_release):
+
+     calculate task's duration
+     calculate task's work done [t.wd + duration]
+     calculate task's critical duration: 
+     	       t.cd = t.cd + duration
+	       MAX(t.child_critical_duration, t.cd)
+     
+     calculate parent's critical duration:
+     	       if the task has been spawned:
+	       	  p.cd += t.cd
+	       else break
+     calculate parent's child critical duration:
+     	       p.ccd = MAX(p.ccd, t.critical_duration)
+
+     set parent's work done to task's work done
+
+when a task is synced -- need to check if there's any difference between this and arg_release
+
+     parent's critical duration is calculated [MAX(p.cd, p.child_critical_duration)]

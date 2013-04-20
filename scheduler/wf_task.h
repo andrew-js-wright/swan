@@ -255,10 +255,10 @@ public:
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
 	start_time = pp_time();
-	id = pp_time();
-	critical_duration = 0;
-	child_critical_duration = 0;
-	work_done = 0;
+	id = data.id;
+	critical_duration = data.critical_duration;
+	child_critical_duration = data.child_critical_duration;
+	work_done = data.work_done;
 	spawned = spawned;
     }
 

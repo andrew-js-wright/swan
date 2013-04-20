@@ -1705,7 +1705,9 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	      task->get_task_data().set_critical_duration(obj_critical_duration);
 	    }
 
-	  printf("objty: in/gen | objcd: %lu", obj_critical_duration);
+	  task_critical_duration = task->get_task_data().get_critical_duration();
+
+	  printf("objty: in/gen | objcd: %lu | tcd: %lu ", obj_critical_duration, task_critical_duration);
 	}
 	return true;
     }   
@@ -1727,7 +1729,8 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
     //seperate override for outdep as it won't be required wait until the task is ready (check this)
      template<typename T>
   bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
-       printf("objty: in/gen | objcd: %lu", obj_critical_duration);
+       unsigned long obj_critical_duration = obj.get_version()->get_metadata()->get_critical_duration();
+       printf("objty: out | objcd: %lu", obj_critical_duration);
        return true;
     } 
 
@@ -1740,6 +1743,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
    char * args = fr->get_task_data().get_args_ptr();
    char * tags = fr->get_task_data().get_tags_ptr();
    arg_apply_fn<critical_path_task_spawn_functor<MetaData, Task>,Tn...>( fn, args, tags );  
+   printf("\n");
  }
 
 //A function to record the critical path of tasks when they end
@@ -1748,86 +1752,88 @@ struct critical_path_task_end_functor {
     
   Task * fr;
   task_data_t * pr;
+  task_data_t * t;
 
   critical_path_task_end_functor( Task * task)
     : fr( task )
   {
     unsigned long temp;
 
-    fr->get_task_data().set_end_time();
+    t = &fr->get_task_data();
 
-    // Set parent
-    pr = fr->get_task_data().get_task_parent();
+    t->set_end_time();
+
+    // Retrieve parent
+    pr = t->get_task_parent();
 
     unsigned long task_duration = 
       (
-       fr->get_task_data().get_end_time() - 
-       fr->get_task_data().get_start_time()
+       t->get_end_time() - 
+       t->get_start_time()
        );
 
     // calculate the amount of work done by the task
-    fr->get_task_data().set_work_done
+    t->set_work_done
       (
-       fr->get_task_data().get_work_done() +
+       t->get_work_done() +
        task_duration 
        );
 
-    // accumulate the work done from the task into the parent
-    pr->get_task_data().mutex.lock();
-    pr->get_task_data().set_work_done
-      (
-       pr->get_task_data().get_work_done() +
-       fr->get_task_data().get_work_done()
-       );
-
-    pr->get_task_data().mutex.unlock();
-
     // get critical duration of parent and add it to this task's duration
-    fr->get_task_data().set_critical_duration
+    t->set_critical_duration
       (
-       fr->get_task_data().get_critical_duration() +
+       t->get_critical_duration() +
        task_duration
        );
 
     // get the critical duration of a given task
-    if(fr->get_task_data().get_critical_duration() < 
-       (temp = fr->get_task_data().get_child_critical_duration()))
+    if(t->get_critical_duration() < 
+       (temp = t->get_child_critical_duration()))
       {
-	fr->set_critical_duration(temp);
+	t->set_critical_duration(temp);
       }
  
-    pr->get_task_data().mutex.lock();
+    pr->mutex.lock();
 
-    if(!fr->get_task_data().get_spawned()){
+    // accumulate the work done from the task into the parent
+    t->set_work_done
+      (
+       pr->get_work_done() +
+       t->get_work_done()
+       );
+
+    if(!t->get_spawned()){
       // if the task hasn't been spawned then add the duration directly onto the parent's
       // critical path
       pr->get_task_data().set_critical_duration
 	(
-	 pr->get_task_data().get_critical_duration()
-	 + fr->get_task_data().get_critical_duration()
+	 pr->get_critical_duration()
+	 + t->get_critical_duration()
 	 );
     }
     // If the task hasn't been spawned then compare with the
     // parent's child critical duration
-    if(pr->get_task_data().get_child_critical_duration() < 
-       (temp = fr->get_task_data().get_critical_duration()))
+    if(pr->get_child_critical_duration() < 
+       (temp = t->get_task_data().get_critical_duration()))
       {
 	pr->set_child_critical_duration(temp);
       }
+
+    pr->set_work_done(t->get_work_done());
       
-    pr->get_task_data().mutex.unlock();
+    pr->mutex.unlock();
 
     pr->set_start_time();
 
-    printf("id: %7lu | ", fr->get_task_data().id);
-    printf("spawned: %d | ", fr->get_task_data().get_spawned());
+    printf("id: %7lu | ", t->id);
+    printf("spawned: %d | ", t->get_spawned());
     printf("dur: %7lu | ", task_duration);
-    printf("cdir: %7lu | ", fr->get_task_data().get_critical_duration());
-    //printf("wd: %7lu | ", fr->get_task_data().get_work_done());
-    //printf("pwd: %7lu | ", pr->get_task_data().get_work_done());
-    printf("pccdir: %7lu | ", pr->get_task_data().get_child_critical_duration());
+    printf("cdir: %7lu | ", t->get_critical_duration());
+    printf("wd: %7lu | ", t->get_work_done());
+    printf("pwd: %7lu | ", pr->get_work_done());
+    printf("pccdir: %7lu | ", pr->get_child_critical_duration());
     printf("pid: %7lu | ", pr->get_task_data().id);
-    printf("d: %d", fr->get_task_data().task_depth);
+    printf("d: %d", t->task_depth);
   }
 
     template<typename T, template<typename U> class DepTy>
@@ -1839,7 +1845,7 @@ struct critical_path_task_end_functor {
   template<typename T>
   bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
     MetaData_* obj_version = obj.get_version()->get_metadata();
-    unsigned long task_critical_duration = fr->get_task_data().get_critical_duration();
+    unsigned long task_critical_duration = t->get_critical_duration();
     unsigned long obj_critical_duration = obj_version->get_critical_duration();
 
     if(task_critical_duration > obj_critical_duration)
@@ -1852,7 +1858,7 @@ struct critical_path_task_end_functor {
   template<typename T>
   bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
     MetaData_* obj_version = obj.get_version()->get_metadata();
-    unsigned long task_critical_duration = fr->get_task_data().get_critical_duration();
+    unsigned long task_critical_duration = t->get_critical_duration();
     unsigned long obj_critical_duration = obj_version->get_critical_duration();
 
     if(task_critical_duration > obj_critical_duration)
@@ -2066,7 +2072,7 @@ struct critical_path_task_end_functor {
 	= stack_frame_traits<Frame>::get_metadata( fr );
      
       // Call critical path functor on tasks with no object deps
-      critical_path_task< Task >( ofr );
+      critical_path_task_spawn< Task >( ofr );
       
       // errs() << "grab not (no objects) " << fr << "\n";
     }

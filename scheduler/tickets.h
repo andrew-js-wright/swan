@@ -418,7 +418,7 @@ struct ready_functor {
 // A "ready function" to check readiness with the dep_traits.
 #if STORED_ANNOTATIONS
 template<typename MetaData, typename Task>
-static inline bool arg_ready_fn( const task_data_t & task_data ) {
+static inline bool arg_ready_fn( task_data_t & task_data ) {
     ready_functor<MetaData, Task> fn;
     char * args = task_data.get_args_ptr();
     char * tags = task_data.get_tags_ptr();
@@ -433,20 +433,22 @@ static inline bool arg_ready_fn( const task_data_t & task_data ) {
     return false;
 }
 #else
-template<typename MetaData, typename Task, typename... Tn>
-static inline bool arg_ready_fn( const task_data_t & task_data ) {
+  template<typename MetaData, typename Task, typename... Tn>
+static inline bool arg_ready_fn( task_data_t & task_data ) {
     ready_functor<MetaData, Task> fn;
     char * args = task_data.get_args_ptr();
     char * tags = task_data.get_tags_ptr();
     if( arg_apply_ufn<ready_functor<MetaData, Task>,Tn...>( fn, args, tags ) ) {
-	// The finalization is not performed if task_data indicates that none
-	// of the arguments are the result of a non-finalized reduction.
-	finalize_functor<MetaData> ffn( task_data );
-	arg_apply_ufn<finalize_functor<MetaData>,Tn...>( ffn, args, tags );
-	// The privatization code optimizes to a no-op if it is not required
-	privatize_functor<MetaData> pfn;
-	arg_apply_ufn<privatize_functor<MetaData>,Tn...>( pfn, args, tags );
-	return true;
+      // The finalization is not performed if task_data indicates that none
+      // of the arguments are the result of a non-finalized reduction.
+      finalize_functor<MetaData> ffn( task_data );
+      arg_apply_ufn<finalize_functor<MetaData>,Tn...>( ffn, args, tags );
+      // The privatization code optimizes to a no-op if it is not required
+      privatize_functor<MetaData> pfn;
+      arg_apply_ufn<privatize_functor<MetaData>,Tn...>( pfn, args, tags );
+      task_data_t *task = &task_data;
+      critical_path_task_spawn<MetaData, task_data_t, Tn...>(task);
+      return true;
     }
     return false;
 }
@@ -457,7 +459,7 @@ static inline bool arg_ready_fn( const task_data_t & task_data ) {
 // ----------------------------------------------------------------------
 class pending_metadata : public task_metadata, private link_metadata {
 #if !STORED_ANNOTATIONS
-    typedef bool (*ready_fn_t)( const task_data_t & );
+    typedef bool (*ready_fn_t)( task_data_t & );
 
     ready_fn_t ready_fn;
 #endif
@@ -478,7 +480,7 @@ public:
 	task_metadata::create<Tn...>( ff );
     }
 
-    bool is_ready() const {
+    bool is_ready() {
 #if STORED_ANNOTATIONS
 	return arg_ready_fn<tkt_metadata, task_metadata>( get_task_data() );
 #else
@@ -517,7 +519,7 @@ struct dl_list_traits<obj::pending_metadata> {
     typedef obj::pending_metadata ValueType;
 
     static size_t get_depth( T const * elm ) { return TF( elm )->get_depth(); }
-    static bool is_ready( T const * elm ) { return elm->is_ready(); }
+    static bool is_ready( T * elm ) { return elm->is_ready(); }
 
     static void set_prev( T * elm, T * prev ) { LF( elm )->prev = prev; }
     static T * get_prev( T const * elm ) { return LF( elm )->prev; }
