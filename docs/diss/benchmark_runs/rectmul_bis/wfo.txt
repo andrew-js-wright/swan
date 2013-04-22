@@ -1,0 +1,470 @@
+
+
+Compile error:
+Andrews-MacBook-Pro-5:src_wfo andrew$ OPT="-O0 -DMODE=0" make
+g++-mp-4.6 -g -O2 -Wall -O0 -DMODE=0 -I../../../scheduler -std=c++0x -momit-leaf-frame-pointer -fno-omit-frame-pointer -pthread -I/Users/andrew/development/swan/obj/../scheduler -I/Users/andrew/development/swan/obj/../util -I../../../util -I../common -I../../../../benchmarks/rectmul_bis/src_wfo/../common -I/Users/andrew/include -L/Users/andrew/lib   -pthread -O0 -DMODE=0   ../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc ../../../util/getoptions.o /Users/andrew/development/swan/obj/scheduler/libschedulers.a  /Users/andrew/development/swan/obj/scheduler/libschedulers.a /Users/andrew/development/swan/obj/util/libtime_us.a -lgoto2_barcelona-r1.13 -o rectmul
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+../../../../benchmarks/rectmul_bis/src_wfo/rectmul.cc:358:75: warning: deprecated conversion from string constant to 'char*' [-Wwrite-strings]
+ld: warning: directory not found for option '-L/Users/andrew/lib'
+ld: library not found for -lgoto2_barcelona-r1.13
+collect2: ld returned 1 exit status
+make: *** [rectmul] Error 1
+
+Create.sh error:
+Andrews-MacBook-Pro-5:src_wfo andrew$ sh create.sh
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-1-1-16-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-1-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-1-1-24-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-1-1-32-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-16-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-5-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-24-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-32-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-16-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-9-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-24-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-32-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-16-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-10-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-24-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-32-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-16-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-11-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-16-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-24-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-24-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-32-jik
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-32-jik with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=0
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/benchmarks
+mkdir: /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo/exec: File exists
+rectmul_bis rectmul wfo-1-1-16-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-1-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-1-1-24-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-1-1-32-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-1-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-1-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=1  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-16-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-5-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-24-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-5-1-32-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-5-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-5-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=5  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-16-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-9-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-24-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-9-1-32-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-9-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-9-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=9  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-16-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-10-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-24-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-10-1-32-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-10-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-10-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=10  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-16-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+#  /Users/andrew/development/swan/obj/scheduler
+Compiling scheduler for target wfo-11-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-16-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=16 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-24-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-24-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=24 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks
+rectmul_bis rectmul wfo-11-1-32-kji
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis
+#  /Users/andrew/development/swan/obj/benchmarks/rectmul_bis/src_wfo
+Compiling rectmul for target wfo-11-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED
+cp: rectmul: No such file or directory
+Compiling rectmul for target wfo-11-1-32-kji with options -O4 -DMODE=1 -DOBJECT_TASKGRAPH=11  -DALGO=1 -DBLOCK_EDGE=32 -DLOOP_ORDER=1
+FAILED

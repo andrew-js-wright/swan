@@ -1,0 +1,8 @@
+* replace if(parent.critical_duration < task.critical_duration) 
+  	  parent.critical_duration = task.critical_duration
+  functions with the MAX function to reduce performance impact
+* put the algorithm's implementations under compiler flag if statements
+* look into moving parent critical path calculation into the task end functor
+  under the if(!spawned) statement.
+* could regulate the way work done and critical path are being transfered
+  between parent and task to improve readability.

@@ -27,6 +27,9 @@ when each task is finished executing (arg_release):
 
      set parent's work done to task's work done
 
+     if task has has out/inout object dependees:
+     	       set object's critical duration [MAX(obj.cd, task.cd)] 
+
 when a task is synced -- need to check if there's any difference between this and arg_release
 
      parent's critical duration is calculated [MAX(p.cd, p.child_critical_duration)]

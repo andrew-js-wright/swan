@@ -1,0 +1,5 @@
+execution error:
+
+Andrews-MacBook-Pro-5:src_wf andrew$ ./fft
+Assertion failed: (get_parent()->is_full() && "Parent of full frame must be full"), function stack_frame, file /Users/andrew/development/swan/obj/../scheduler/wf_stack_frame.h, line 565.
+Abort trap: 6
