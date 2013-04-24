@@ -218,6 +218,7 @@ public:
 	id = pp_time();
 	spawned = spawned_;
 	parent = parent_;
+	work_done = 0;
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
 		     char * end_of_stack, size_t nargs_, task_data_t * parent_, bool spawned_ ){

@@ -1796,7 +1796,7 @@ struct critical_path_task_end_functor {
     pr->mutex.lock();
 
     // accumulate the work done from the task into the parent
-    t->set_work_done
+    pr->set_work_done
       (
        pr->get_work_done() +
        t->get_work_done()
@@ -1818,8 +1818,6 @@ struct critical_path_task_end_functor {
       {
 	pr->set_child_critical_duration(temp);
       }
-
-    pr->set_work_done(t->get_work_done());
       
     pr->mutex.unlock();
 
@@ -1879,6 +1877,89 @@ struct critical_path_task_end_functor {
     printf("\n");
 }
 
+  template<typename Task>
+  static inline void critical_path_task_end_cilk( Task * fr ) {
+  
+  task_data_t * pr;
+  task_data_t * t;
+
+    unsigned long temp;
+
+    t = &fr->get_task_data();
+
+    t->set_end_time();
+
+    // Retrieve parent
+    pr = t->get_task_parent();
+
+    unsigned long task_duration = 
+      (
+       t->get_end_time() - 
+       t->get_start_time()
+       );
+
+    // calculate the amount of work done by the task
+    t->set_work_done
+      (
+       t->get_work_done() +
+       task_duration 
+       );
+
+    // get critical duration of parent and add it to this task's duration
+    t->set_critical_duration
+      (
+       t->get_critical_duration() +
+       task_duration
+       );
+
+    // get the critical duration of a given task
+    if(t->get_critical_duration() < 
+       (temp = t->get_child_critical_duration()))
+      {
+	t->set_critical_duration(temp);
+      }
+ 
+    pr->mutex.lock();
+
+    // accumulate the work done from the task into the parent
+    pr->set_work_done
+      (
+       pr->get_work_done() +
+       t->get_work_done()
+       );
+
+    if(!t->get_spawned()){
+      // if the task hasn't been spawned then add the duration directly onto the parent's
+      // critical path
+      pr->get_task_data().set_critical_duration
+	(
+	 pr->get_critical_duration()
+	 + t->get_critical_duration()
+	 );
+    }
+    // If the task hasn't been spawned then compare with the
+    // parent's child critical duration
+    if(pr->get_child_critical_duration() < 
+       (temp = t->get_task_data().get_critical_duration()))
+      {
+	pr->set_child_critical_duration(temp);
+      }
+      
+    pr->mutex.unlock();
+
+    pr->set_start_time();
+
+    printf("id: %7lu | ", t->id);
+    printf("spawned: %d | ", t->get_spawned());
+    printf("dur: %7lu | ", task_duration);
+    printf("cdir: %7lu | ", t->get_critical_duration());
+    printf("wd: %7lu | ", t->get_work_done());
+    printf("pwd: %7lu | ", pr->get_work_done());
+    printf("pccdir: %7lu | ", pr->get_child_critical_duration());
+    printf("pid: %7lu | ", pr->get_task_data().id);
+    printf("d: %d\n", t->task_depth);
+  }
+
 #if STORED_ANNOTATIONS
   // A "ini_ready function" to test readiness of objects at spawn-time.
   template<typename MetaData, typename Task>
@@ -1917,7 +1998,7 @@ struct critical_path_task_end_functor {
   // Interface for the spawn(), call(), leaf_call(), ssync() functions.
   // ------------------------------------------------------------------------
 
-  // Check argument readiness
+// Check argument readiness
 #if STORED_ANNOTATIONS
   template<typename MetaData, typename Task>
   static inline bool arg_ready( task_data_t & task_data ) {
@@ -1936,8 +2017,6 @@ struct critical_path_task_end_functor {
   template<typename MetaData, typename Task, typename... Tn>
   static inline bool arg_ready( Tn... an ) {
     bool ready = arg_dini_ready_fn<MetaData, Task, Tn...>( an... );
-
-    //critical_path_task( an... );
 
     OBJ_PROF(arg_ini_ready_calls);
 #if PROFILE_OBJECT
@@ -2067,7 +2146,6 @@ struct critical_path_task_end_functor {
     } else {
 
       // If task has no task dependencies it will go here
-      
       typename stack_frame_traits<Frame>::metadata_ty * ofr
 	= stack_frame_traits<Frame>::get_metadata( fr );
      
@@ -2671,6 +2749,10 @@ public:
     }
   }
 
+  void critical_path_end( task_metadata * fr ) {
+    (*critical_path_end_fn)( fr );
+  }
+
   void enable_deps( bool already_enabled
 #if !STORED_ANNOTATIONS
 		    , issue_fn_t grfn
@@ -2791,7 +2873,7 @@ struct task_graph_traits {
     release_task( StackFrame * fr ) {
 	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr );
-	//obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
+	obj::critical_path_task_end_cilk<task_data_t>( &ofr->get_task_data() );
 	assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
     }
@@ -2799,7 +2881,6 @@ struct task_graph_traits {
     release_task( PendingFrame * fr ) {
 	typename stack_frame_traits<PendingFrame>::metadata_ty * ofr
 	    = stack_frame_traits<PendingFrame>::get_metadata( fr );
-	//obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
 	assert( ofr->enabled() );
 	ofr->release_deps( ofr );
     }
@@ -2807,11 +2888,10 @@ struct task_graph_traits {
     release_task_and_get_ready( FullFrame * fr ) {
        typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr->get_frame() );
-       //obj::critical_path_task_end<obj::obj_metadata, obj::task_metadata>( ofr );
        typename stack_frame_traits<FullFrame>::metadata_ty * opf
 	    = stack_frame_traits<FullFrame>::get_metadata( fr->get_parent() );
-	// assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
+	obj::critical_path_task_end_cilk<task_data_t>( &ofr->get_task_data() );
 	return (QueuedFrame *)opf->get_ready_task_after( ofr );
     }
     static void
