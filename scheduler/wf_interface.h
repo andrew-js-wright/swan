@@ -673,6 +673,7 @@ void ssync() {
     assert( fr->get_state() == fs_executing );
     LOG( id_sync_enter, fr );
 
+    fr->get_task_data().mutex.lock();
     // this should be reserved for a sync statement!
     if(fr->get_metadata()->get_task_data().get_child_critical_duration() >
        fr->get_metadata()->get_task_data().get_critical_duration())
@@ -680,6 +681,7 @@ void ssync() {
 	fr->get_metadata()->get_task_data().set_critical_duration(
 	   fr->get_metadata()->get_task_data().get_child_critical_duration());
       }
+    fr->get_task_data().mutex.unlock();
 
 #if PROFILE_WORKER
     worker_state::tls()->get_profile_worker().num_ssync++;
@@ -709,29 +711,39 @@ void ssync() {
 // aside, allowing to resume it later and even have it stolen.
 template<typename T, template<typename U> class DepTy>
 void ssync( DepTy<T> obj ) {
-    stack_frame * fr = stack_frame::my_stack_frame();
-    assert( fr->get_state() == fs_executing );
-    LOG( id_dsync_enter, fr );
+  stack_frame * fr = stack_frame::my_stack_frame();
+  assert( fr->get_state() == fs_executing );
+  LOG( id_dsync_enter, fr );
+
+    fr->get_task_data().mutex.lock();
+    // this should be reserved for a sync statement!
+    if(fr->get_metadata()->get_task_data().get_child_critical_duration() >
+       fr->get_metadata()->get_task_data().get_critical_duration())
+      {
+	fr->get_metadata()->get_task_data().set_critical_duration(
+	   fr->get_metadata()->get_task_data().get_child_critical_duration());
+      }
+    fr->get_task_data().mutex.unlock();
 
 #if PROFILE_WORKER
-    worker_state::tls()->get_profile_worker().num_ssync++;
+  worker_state::tls()->get_profile_worker().num_ssync++;
 #endif
 
-    // If the frame is full and has outstanding children, jump back to scheduler
-    // until they have executed. Otherwise, we're done.
-    if( fr->is_full() ) {
-	if( !DepTy<T>::dep_traits::arg_ini_ready( obj ) ) {
-	    do {
-		fr->sync();
-		CLOBBER_CALLEE_SAVED_BUT1();
-		// all following code will be executed when resuming the sync
-		assert( fr == stack_frame::my_stack_frame()
-			&& "Sanity check on variables" );
-	    } while( !DepTy<T>::dep_traits::arg_ini_ready( obj ) );
-	}
-	obj.get_version()->finalize(); // reductions
+  // If the frame is full and has outstanding children, jump back to scheduler
+  // until they have executed. Otherwise, we're done.
+  if( fr->is_full() ) {
+    if( !DepTy<T>::dep_traits::arg_ini_ready( obj ) ) {
+      do {
+	fr->sync();
+	CLOBBER_CALLEE_SAVED_BUT1();
+	// all following code will be executed when resuming the sync
+	assert( fr == stack_frame::my_stack_frame()
+		&& "Sanity check on variables" );
+      } while( !DepTy<T>::dep_traits::arg_ini_ready( obj ) );
     }
-    assert( fr->get_state() == fs_executing );
+    obj.get_version()->finalize(); // reductions
+  }
+  assert( fr->get_state() == fs_executing );
 }
 
 // TODO: figure out how to write a template for foreach that allows both

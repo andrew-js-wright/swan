@@ -73,7 +73,9 @@ void chill_recursive( int n ){
 }
 
 void sleep_test( int n ) {
-  call ( chill, n );
+  spawn ( chill, n );
+  spawn ( chill, n );
+  ssync ();
 }
 
 void recursive_test( int n ) {
