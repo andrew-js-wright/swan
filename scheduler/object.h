@@ -51,7 +51,6 @@
 #include "debug.h"
 
 #include "../util/pp_time.h"
-#include "../util/critical_path.h"
 
 #include <iostream>
 #include <fstream>
