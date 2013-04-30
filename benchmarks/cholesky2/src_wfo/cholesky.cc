@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include "cblas.h"
+typedef int blasint;
 
 #include "wf_interface.h"
 #include "pp_time.h"
