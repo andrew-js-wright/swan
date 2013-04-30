@@ -490,10 +490,12 @@ worker_state::worker_fn() {
 	stack_frame * child_fr = child->get_frame();
 	if(parent->get_frame()->get_state() == fs_dummy)
 	  {
+#if CRITICAL_PATH
 	    obj::critical_path_task_end<obj::obj_metadata, task_data_t>( &child_fr->get_task_data() );
 	    printf("Total work done is: %lu\n", child_fr->get_metadata()->get_task_data().get_work_done());
 	    printf("Critical duration is: %lu | depth: %d\n", child_fr->get_metadata()->get_task_data().get_critical_duration(), child_fr->get_metadata()->get_task_data().task_depth);
 	    printf("Parallelism: %6.3f\n",((double)child_fr->get_metadata()->get_task_data().get_work_done()/(double)child_fr->get_metadata()->get_task_data().get_critical_duration()));
+#endif
 	  }
 	child->~full_frame(); // full_frame destructor, because not deleted
 	delete child_fr;      // de-allocates child also, but no destructor call

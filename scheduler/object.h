@@ -1660,6 +1660,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
     fr->stop_registration( wakeup );
 };
 
+#if CRITICAL_PATH
   template< typename MetaData_, typename Task>
   struct critical_path_task_spawn_functor {
     Task * task;
@@ -1682,15 +1683,11 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 
       parent->set_work_done(parent->get_work_done() + parent_duration);
 
-      task->mutex.lock();
-
       task->set_critical_duration(parent->get_critical_duration());
 
       task->get_task_data().task_depth = parent->task_depth + 1;
 
       parent->mutex.unlock();
-
-      task->mutex.unlock();
 
       std::ofstream out;
       char name [50];
@@ -1806,14 +1803,8 @@ struct critical_path_task_end_functor {
 
     t->set_end_time();
 
-    t->get_task_parent()->mutex.lock();
-
     // Retrieve parent
     pr = t->get_task_parent();
-
-    pr->mutex.unlock();
-
-    t->mutex.lock();
 
     unsigned long task_duration = 
       (
@@ -1869,7 +1860,6 @@ struct critical_path_task_end_functor {
       }
       
     pr->mutex.unlock();
-    t->mutex.unlock();
 
     std::ofstream out;
     char name [50];
@@ -1972,6 +1962,7 @@ struct critical_path_task_end_functor {
     out.close();
     //printf("\n");
 }
+#endif
 
 #if STORED_ANNOTATIONS
   // A "ini_ready function" to test readiness of objects at spawn-time.
@@ -2127,9 +2118,11 @@ struct critical_path_task_end_functor {
 	   , &arg_release_fn<MetaData,Task,Tn...>
 #endif
 	    );
-	
+
+#if CRITICAL_PATH
 #if !STORED_ANNOTATIONS
 	ofr->set_critical_path_end_fn( &critical_path_task_end<MetaData, Task, Tn...> );
+#endif
 #endif
 
 	ofr->template create< Tn...>
@@ -2142,8 +2135,11 @@ struct critical_path_task_end_functor {
 
 	arg_dgrab_fn<MetaData, Task, Tn...>(
 					    ofr, opr, std::is_same<Frame,pending_frame>::value, an... );
+
+#if CRITICAL_PATH
 	//critical_path_task<Task>(ofr);
 	critical_path_task_spawn<MetaData, Task, Tn...>(ofr);
+#endif
       } else {
 	// errs() << "grab later " << fr << "\n";
 	typename stack_frame_traits<Frame>::metadata_ty * ofr
@@ -2155,10 +2151,11 @@ struct critical_path_task_end_functor {
 #endif
 			  );
 
+#if CRITICAL_PATH
 #if !STORED_ANNOTATIONS
 	ofr->set_critical_path_end_fn( &critical_path_task_end<MetaData, Task, Tn...> );
 #endif
-
+#endif
 	ofr->template create<Tn...>(
 				    get_full_task<StackFrame, FullFrame, FullTask >( parent ) );
       }
@@ -2169,11 +2166,13 @@ struct critical_path_task_end_functor {
       typename stack_frame_traits<Frame>::metadata_ty * ofr
 	= stack_frame_traits<Frame>::get_metadata( fr );
 
+#if CRITICAL_PATH
 #if !STORED_ANNOTATIONS
       ofr->set_critical_path_end_fn( &critical_path_task_end<MetaData, Task, Tn...> );
      
       // Call critical path functor on tasks with no object deps
       critical_path_task_spawn< Task >( ofr );
+#endif
 #endif
       // errs() << "grab not (no objects) " << fr << "\n";
     }
@@ -2726,7 +2725,9 @@ public:
 class obj_dep_traits {
   typedef void (*issue_fn_t)( task_metadata *, obj_dep_traits * );
   typedef void (*release_fn_t)( task_metadata * );
+#if CRITICAL_PATH
   typedef void (*critical_path_end_fn_t)( task_metadata * );
+#endif
 
   enum state_t {
     s_nodep,
@@ -2736,7 +2737,9 @@ class obj_dep_traits {
 #if !STORED_ANNOTATIONS
   issue_fn_t issue_fn;
   release_fn_t release_fn;
+#if CRITICAL_PATH
   critical_path_end_fn_t critical_path_end_fn;
+#endif
 #endif
   state_t state;
   bool pad[7]; // this padding is here because inherited_size<> does not work
@@ -2753,7 +2756,9 @@ protected:
   void create_from_pending( obj_dep_traits * odt ) {
 #if !STORED_ANNOTATIONS
     release_fn = odt->release_fn;
+#if CRITICAL_PATH
     critical_path_end_fn = odt->critical_path_end_fn;
+#endif
 #endif
     state = s_issued;
     finalize[0].swap( odt->finalize[0] );
@@ -2772,12 +2777,15 @@ public:
   }
 
 #if !STORED_ANNOTATIONS
+#if CRITICAL_PATH
   void set_critical_path_end_fn( critical_path_end_fn_t cpefn )
   {
     critical_path_end_fn = cpefn;
   }
 #endif
+#endif
 
+#if CRITICAL_PATH
   void critical_path_end( task_metadata * fr ) 
   {
     if(fr->get_task_data().task_depth > 0)
@@ -2785,6 +2793,7 @@ public:
     //else
       //collateOutputs();
   }
+#endif
 
   void enable_deps( bool already_enabled
 #if !STORED_ANNOTATIONS
@@ -2904,7 +2913,9 @@ struct task_graph_traits {
     release_task( StackFrame * fr ) {
 	typename stack_frame_traits<StackFrame>::metadata_ty * ofr
 	    = stack_frame_traits<StackFrame>::get_metadata( fr );
+#if CRITICAL_PATH
 	ofr->critical_path_end( ofr );
+#endif
 	assert( !ofr->enabled() || fr->get_parent()->is_full() );
 	ofr->release_deps( ofr );
     }
@@ -2912,7 +2923,9 @@ struct task_graph_traits {
     release_task( PendingFrame * fr ) {
 	typename stack_frame_traits<PendingFrame>::metadata_ty * ofr
 	    = stack_frame_traits<PendingFrame>::get_metadata( fr );
+#if CRITICAL_PATH
 	ofr->critical_path_end( ofr );
+#endif
 	assert( ofr->enabled() );
 	ofr->release_deps( ofr );
     }
@@ -2922,7 +2935,9 @@ struct task_graph_traits {
 	    = stack_frame_traits<StackFrame>::get_metadata( fr->get_frame() );
        typename stack_frame_traits<FullFrame>::metadata_ty * opf
 	    = stack_frame_traits<FullFrame>::get_metadata( fr->get_parent() );
+#if CRITICAL_PATH
 	ofr->critical_path_end( ofr );
+#endif
 	ofr->release_deps( ofr );
 	return (QueuedFrame *)opf->get_ready_task_after( ofr );
     }

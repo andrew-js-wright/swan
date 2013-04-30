@@ -447,7 +447,9 @@ static inline bool arg_ready_fn( task_data_t & task_data ) {
       privatize_functor<MetaData> pfn;
       arg_apply_ufn<privatize_functor<MetaData>,Tn...>( pfn, args, tags );
       task_data_t *task = &task_data;
+#if CRITICAL_PATH
       critical_path_task_spawn<MetaData, task_data_t, Tn...>(task);
+#endif
       return true;
     }
     return false;

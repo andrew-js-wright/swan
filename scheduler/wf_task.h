@@ -152,6 +152,7 @@ class task_data_t {
     char * args;
     char * tags;
 
+#if CRITICAL_PATH
   //work related variables
   unsigned long start_time;
   unsigned long end_time;
@@ -164,7 +165,7 @@ class task_data_t {
 
   unsigned long critical_duration; //critical path
   unsigned long child_critical_duration;
-
+#endif
   // Decided it was a good idea to put the parent here as we need it regardless
   // of which type of frame we are accessing.
   task_data_t * parent;
@@ -211,6 +212,7 @@ public:
 	req_fin = false;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+#if CRITICAL_PATH	
 	critical_duration = 0;
 	child_critical_duration = 0;
 	start_time = pp_time();
@@ -219,6 +221,7 @@ public:
 	spawned = spawned_;
 	parent = parent_;
 	work_done = 0;
+#endif
     }
     void initialize( size_t args_size, size_t tags_size, size_t fn_tags_size,
 		     char * end_of_stack, size_t nargs_, task_data_t * parent_, bool spawned_ ){
@@ -235,6 +238,7 @@ public:
 	req_fin = false;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+#if CRITICAL_PATH	
 	parent = parent_;
 	critical_duration = 0;
 	start_time = pp_time();
@@ -243,6 +247,7 @@ public:
 	child_critical_duration = 0;
 	work_done = 0;
 	spawned = spawned_;
+#endif
     }
   void initialize( task_data_t & data, bool spawned_ ) {
 	arg_buf = data.arg_buf;
@@ -255,12 +260,14 @@ public:
 	data.arg_buf = 0;
 	assert( (intptr_t(args) & 15) == 0 );
 	assert( (intptr_t(tags) & 15) == 0 );
+#if CRITICAL_PATH
 	start_time = pp_time();
 	id = data.id;
 	critical_duration = data.critical_duration;
 	child_critical_duration = data.child_critical_duration;
 	work_done = data.work_done;
 	spawned = spawned;
+#endif
     }
 
     char * get_args_ptr() const { return args; }
@@ -287,6 +294,7 @@ public:
     const task_data_t & get_task_data() const { return *this; }
           task_data_t & get_task_data()       { return *this; }
 
+#if CRITICAL_PATH
   void set_start_time() { start_time = pp_time(); }
   unsigned long get_start_time() { return start_time; }
 
@@ -315,6 +323,7 @@ public:
   task_data_t * get_task_parent() { return parent; }
 
   bool get_spawned() { return spawned; }
+#endif
 };
 
 //----------------------------------------------------------------------
