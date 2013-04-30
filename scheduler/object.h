@@ -1787,7 +1787,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
  }
 
 //A function to record the critical path of tasks when they end
-  template<typename MetaData_, typename Task>
+template<typename MetaData_, typename Task>
 struct critical_path_task_end_functor {
     
   Task * fr;
