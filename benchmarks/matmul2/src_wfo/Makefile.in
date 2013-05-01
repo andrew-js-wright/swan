@@ -35,7 +35,7 @@ include $(top_builddir)/util/Makefile.use_us
 #LDLIBS+=-llapack_atlas
 #LDLIBS+=-L$(HOME)/ray/lib -lgoto2
 
-matmul_novec_goto: LDLIBS+=$(HOME)/ray/lib/libgoto2_nehalem-r1.13_T1.a
+matmul_novec_goto: LDLIBS+=-lblas -llapack
 
 matmul_novec_goto: matmul_novec.cc
 	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@

@@ -674,7 +674,7 @@ void ssync() {
     LOG( id_sync_enter, fr );
 
 #if CRITICAL_PATH
-    fr->get_task_data().mutex.lock();
+    //fr->get_task_data().mutex.lock();
     // this should be reserved for a sync statement!
     if(fr->get_metadata()->get_task_data().get_child_critical_duration() >
        fr->get_metadata()->get_task_data().get_critical_duration())
@@ -682,7 +682,7 @@ void ssync() {
 	fr->get_metadata()->get_task_data().set_critical_duration(
 	   fr->get_metadata()->get_task_data().get_child_critical_duration());
       }
-    fr->get_task_data().mutex.unlock();
+    //fr->get_task_data().mutex.unlock();
 #endif
 
 #if PROFILE_WORKER
@@ -718,7 +718,7 @@ void ssync( DepTy<T> obj ) {
   LOG( id_dsync_enter, fr );
 
 #if CRITICAL_PATH
-    fr->get_task_data().mutex.lock();
+  //fr->get_task_data().mutex.lock();
     // this should be reserved for a sync statement!
     if(fr->get_metadata()->get_task_data().get_child_critical_duration() >
        fr->get_metadata()->get_task_data().get_critical_duration())
@@ -726,7 +726,7 @@ void ssync( DepTy<T> obj ) {
 	fr->get_metadata()->get_task_data().set_critical_duration(
 	   fr->get_metadata()->get_task_data().get_child_critical_duration());
       }
-    fr->get_task_data().mutex.unlock();
+    //fr->get_task_data().mutex.unlock();
 #endif
 
 #if PROFILE_WORKER
