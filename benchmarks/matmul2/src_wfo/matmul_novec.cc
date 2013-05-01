@@ -32,7 +32,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include "clapack_used.h"
-#include "cblas.h"
 typedef int blasint;
 #include "wf_interface.h"
 #include "pp_time.h"
