@@ -355,8 +355,15 @@ public:
     }
 
     template<typename T>
-    static void construct( void * ptr ) {
+    static typename std::enable_if<!std::is_array<T>::value>::type
+    construct( void * ptr ) {
 	new (ptr) T();
+    }
+
+    template<typename T>
+    static typename std::enable_if<std::is_array<T>::value>::type
+    construct( void * ptr ) {
+      //empty
     }
 
     void destruct( void * ptr ) {
