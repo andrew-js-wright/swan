@@ -269,7 +269,7 @@ static void init(int argc, char **argv, unsigned long *NB_p, unsigned long *N_p,
 {
   // long ISEED[4] = {0,0,0,1};
   // long IONE=1;
-  long DIM;
+  long DIM = 1;
   long NB;
 
   
