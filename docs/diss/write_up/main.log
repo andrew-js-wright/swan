@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  3 MAY 2013 16:54
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  4 MAY 2013 00:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -292,35 +292,76 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 (/usr/local/texlive/2012/texmf-dist/tex/latex/comment/comment.sty
 \CommentStream=\write3
 
-Excluding comment 'comment') (./main.aux)
+Excluding comment 'comment')
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/listings.sty
+\lst@mode=\count89
+\lst@gtempboxa=\box26
+\lst@token=\toks17
+\lst@length=\count90
+\lst@currlwidth=\dimen105
+\lst@column=\count91
+\lst@pos=\count92
+\lst@lostspace=\dimen106
+\lst@width=\dimen107
+\lst@newlines=\count93
+\lst@lineno=\count94
+\lst@maxwidth=\dimen108
+
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2007/02/22 1.4 (Carsten Heinz)
+\c@lstnumber=\count95
+\lst@skipnumbers=\count96
+\lst@framebox=\box27
+)
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/listings.cfg
+File: listings.cfg 2007/02/22 1.4 listings configuration
+))
+Package: listings 2007/02/22 1.4 (Carsten Heinz)
+
+(/usr/local/texlive/2012/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2005/11/14 v1.0j Standard LaTeX Color (DPC)
+
+(/usr/local/texlive/2012/texmf-dist/tex/latex/latexconfig/color.cfg
+File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
+)
+Package color Info: Driver file: pdftex.def on input line 130.
+)
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2004/09/05 1.3 listings language file
+)
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2004/09/05 1.3 listings language file
+)
+(/usr/local/texlive/2012/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2007/02/22 1.4 (Carsten Heinz)
+) (./main.aux)
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-
-(/usr/local/texlive/2012/texmf-dist/tex/context/base/supp-pdf.mkii
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+ (/usr/local/texlive/2012/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count89
-\scratchdimen=\dimen105
-\scratchbox=\box26
-\nofMPsegments=\count90
-\nofMParguments=\count91
-\everyMPshowfont=\toks17
-\MPscratchCnt=\count92
-\MPscratchDim=\dimen106
-\MPnumerator=\count93
-\makeMPintoPDFobject=\count94
-\everyMPtoPDFconversion=\toks18
+\scratchcounter=\count97
+\scratchdimen=\dimen109
+\scratchbox=\box28
+\nofMPsegments=\count98
+\nofMParguments=\count99
+\everyMPshowfont=\toks18
+\MPscratchCnt=\count100
+\MPscratchDim=\dimen110
+\MPnumerator=\count101
+\makeMPintoPDFobject=\count102
+\everyMPtoPDFconversion=\toks19
 ) (/usr/local/texlive/2012/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
 )
@@ -369,10 +410,11 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
+\c@lstlisting=\count103
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <14.4> on input line 10.
+(Font)              <14.4> on input line 21.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 10.
+(Font)              <7> on input line 21.
 
 (./section_introduction.tex [1{/usr/local/texlive/2012/texmf-var/fonts/map/pdft
 ex/updmap/pdftex.map}
@@ -409,7 +451,15 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <8> on input line 151.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 151.
-[5]) (./section_investigation.tex [6])
+[5]) (./section_investigation.tex [6]
+
+Package natbib Warning: Citation `id22' on page 7 undefined on input line 17.
+
+[7]
+
+LaTeX Warning: Float too large for page by 17.39996pt on input line 68.
+
+)
 
 ! LaTeX Error: File `section_results.tex' not found.
 
@@ -434,7 +484,7 @@ Underfull \hbox (badness 1112) in paragraph at lines 15--19
 \OT1/cmr/m/n/12 maul, C.E. Leis-er-son, K.H. Ran-dall,
  []
 
-
+[8]
 Underfull \hbox (badness 10000) in paragraph at lines 60--66
 \OT1/cmr/m/n/12 S. Kier-stead, S.S. Lim, and
  []
@@ -454,7 +504,7 @@ Underfull \hbox (badness 1874) in paragraph at lines 60--66
 \OT1/cmr/m/it/12 tributed Sys-tems, IEEE Trans-ac-tions
  []
 
-[7]
+
 Underfull \hbox (badness 10000) in paragraph at lines 80--85
 []\OT1/cmr/m/n/12 Andreas Sand-berg, David Black-
  []
@@ -469,31 +519,34 @@ Underfull \hbox (badness 2418) in paragraph at lines 80--85
 \OT1/cmr/m/it/12 the 21st in-ter-na-tional con-fer-ence on
  []
 
-) [8
+)
 
-] (./main.aux) ) 
+Package natbib Warning: There were undefined citations.
+
+[9] (./main.aux) ) 
 Here is how much of TeX's memory you used:
- 2140 strings out of 493488
- 28889 string characters out of 3141326
- 88774 words of memory out of 3000000
- 5421 multiletter control sequences out of 15000+200000
+ 4009 strings out of 493488
+ 53574 string characters out of 3141326
+ 198860 words of memory out of 3000000
+ 7266 multiletter control sequences out of 15000+200000
  9155 words of font info for 32 fonts, out of 3000000 for 9000
  957 hyphenation exceptions out of 8191
- 37i,7n,27p,1283b,235s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmbx12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmmi12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmmi8.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/
+ 38i,8n,58p,1283b,1289s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmbx12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmmi12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts
+/cm/cmmi8.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmr10.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/
 cmr12.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cm
 r17.pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8
 .pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.
 pfb></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pf
 b></usr/local/texlive/2012/texmf-dist/fonts/type1/public/amsfonts/cm/cmti12.pfb
 >
-Output written on main.pdf (8 pages, 174947 bytes).
+Output written on main.pdf (9 pages, 195953 bytes).
 PDF statistics:
- 68 PDF objects out of 1000 (max. 8388607)
- 47 compressed objects within 1 object stream
+ 75 PDF objects out of 1000 (max. 8388607)
+ 52 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,12 +1,69 @@
 \section{Investigation Method}
-As alluded to above the most useful metrics which currently exist to analyse parallel programs revolve around 
-the program's span also know as it's \emph{critical path}. The critical path is the shortest route through a program. 
-The critical path answers the question "Presuming program P is exectuted on an infite number of processors, 
-what is the shortest possible time it could take?". In this research the task graph will be analysed at run time 
-and the critical path established. This will produce a \emph{critical duration} which is the shortest possible execution time of a program regardless of the number of processors it is run on.
 
-\subsection{}
+As alluded to above the most useful metrics which currently exist to analyse parallel programs revolve around the program's span also know as it's \emph{Critical Duration}.
 
-\subsection{Critical Path Algorithm}
-The critical path algorithm devised in this research can be broken into two parts. Firstly the work first aspect, whereby object dependencies are ignored and secondly the 
+\subsection{Critical Duration Analysis}
+
+The critical duration is the shortest possible time takes for a given parallel program to execute. This is often represented as \(T_\infty\) as it is the time taken on an infinite number of processors. In this research the task graph will be analysed at run time and the critical duration established. 
+
+This information allows us to calculate the degree of parallelism which, as seen in Section \ref{section:cilkview}, will determine how scalable a program is. Scalability is a vital measurement in regards to parallel programming as the primary goal of parallel programming is to allow performance to increase as the number of threads increase. 
+
+In order to get a value for parallelism, and therefore scalability, another metric is required. This is the work done. Work is defined as the total amount of time spent in all strands. This can be denoted as \(T_1\) that is the time taken when the program is run on a single thread because a serial execution will carry out all of the work sequentially.
+
+\subsubsection{Measurement of Time}
+
+There are two options to consider when measuring time. The first is instruction count which is the method that Cilkview \cite{id8} adopts. They argue that because the advantages of adding another processor would only be realised if there was a large difference between parallelism and actual speed-up there is no need for a precise measurement of time. 
+
+The other option is to take the actual time which is the method that this research will use. The benefit of this is that time is an easily relatable to metric and can be validated externally. Time was captured at a millisecond level to give an accurate result. This was chosen over cycles in order to increase portability and to ensure that changes brought about by CPU power saving options where the frequency is reduced wouldn't affect the measurements. Also gettimeofday() from the sys/time.h library was used over RDTSC \cite{id22} due to issues with CPU timers not being synchronised over multiple cores. 
+
+A potential negative of this method of timing is the fact that it is it will take into account the entire host environment rather than the individual process. So if the user is running the program on a machine which is heavily loaded with running tasks the time measurements could be slower than on the same machine when it running only the program. This could affect the level of parallelism to be expected. It would still be accurate however in terms of wall clock time which is what we are concerned with here.
+
+\subsubsection{Non-object Dependent Critical Duration Analysis}
+
+The critical path algorithm devised in this research can be broken into two parts. Firstly the work first aspect, whereby object dependencies are ignored and secondly the object aware aspect. We will now discuss the details of these aspects.
+
+The algorithm for obtaining the critical duration at run time without object dependencies can be seen in Figure \ref{fig:code_nodeps}. The parent's work is calculated on the current strand by taking the current time away from the last start time which will give us the parent's current duration, we then add that to the current amount of work done by the parent to get the current total work done. The parent's critical path is then updated. All work that parent has done on the current strand will get directly added into their critical path. The spawned/called task is assigned the parent's current critical duration. We will see the reason for this when objects are introduced.
+
+When a task is finished and returns to it's parent the duration, work done and critical duration are calculated. The calculation of the critical duration takes into account the child's critical duration also. If a task has spawned children who have had a longer critical duration that the task its self then their critical duration should become it's critical duration. Once this has been determined the task's duration should be added to the critical duration because, like the parent tasks, the duration of a given task will always be a part of it's critical duration. 
+
+\begin{figure}
+\begin{lstlisting}[breaklines, showstringspaces=false]
+  when each task is ready to execute:
+
+     calculate parent's duration
+     calculate parent's work done [p.wd + duration]
+     calculate parent's critical path [p.cp + duration]     
+
+     assign task's critcial path = parent's critical path
+
+  when a task is finished executing:
+
+     calculate task's duration
+     calculate task's work done [t.wd + duration]
+     calculate task's critical duration: 
+     	   t.cd = MAX(t.child_critical_duration, t.cd)
+	   t.cd = t.cd + duration
+     
+     calculate parent's critical duration:
+     	   if the task has been spawned:
+	       	  p.cd += t.cd
+	   else break
+     calculate parent's child critical duration:
+     	   p.ccd = MAX(p.ccd, t.critical_duration)
+
+     increase parent's work done by task's work done
+
+  when a task is synced
+
+     parent's critical duration is calculated [MAX(p.cd, p.child_critical_duration)]
+
+\end{lstlisting}
+
+%need to describe how it's different to the cilkview algorithm
+
+
+
+\caption{Algorithm describing the critical duration as captured without object dependencies}
+\label{fig:code_nodeps}
+ \end{figure}
 \subsection{}
