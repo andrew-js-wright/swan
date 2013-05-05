@@ -1915,39 +1915,25 @@ struct critical_path_task_end_functor {
 
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
-      /*      std::ofstream out;
-      char name [50];
-      sprintf(name, "output/%lu", fr->get_task_data().id);
-      
-      out.open(name, std::ios::app);
-      out << " | objty: in/generic | objcd: " << obj_ext.get_version()->get_metadata()->get_critical_duration();
-      //printf(" | objty: inout | objcd: %lu ", obj_ext.get_version()->get_metadata()->get_critical_duration());
-      
-      out.close();*/
-      return true;
-    }
+      MetaData_* obj_version = obj_ext.get_version()->get_metadata();
+      unsigned long task_critical_duration = t->get_critical_duration();
+      unsigned long obj_critical_duration = obj_version->get_critical_duration();
 
-  template<typename T>
-  bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
-    MetaData_* obj_version = obj.get_version()->get_metadata();
-    unsigned long task_critical_duration = t->get_critical_duration();
-    unsigned long obj_critical_duration = obj_version->get_critical_duration();
-
-    if(task_critical_duration > obj_critical_duration)
-      obj_version->set_critical_duration( task_critical_duration );
+      if(task_critical_duration > obj_critical_duration)
+	obj_version->set_critical_duration( task_critical_duration );
  
-    /*
-    std::ofstream out;
-    char name [50];
-    sprintf(name, "output/%lu", fr->get_task_data().id);
-    out.open(name, std::ios::app);
+      /*
+	std::ofstream out;
+	char name [50];
+	sprintf(name, "output/%lu", fr->get_task_data().id);
+	out.open(name, std::ios::app);
 
-    out << " | objty: out | objcd : " << obj_version->get_critical_duration();
+	out << " | objty: out | objcd : " << obj_version->get_critical_duration();
 
-    //printf(" | objty: out | objcd: %lu ", obj_version->get_critical_duration());
-    out.close();*/
-    return true;
-  } 
+	//printf(" | objty: out | objcd: %lu ", obj_version->get_critical_duration());
+	out.close();*/
+      return true;
+    } 
 
   template<typename T>
   bool operator () ( inoutdep<T> & obj, typename inoutdep<T>::dep_tags & sa ) {
