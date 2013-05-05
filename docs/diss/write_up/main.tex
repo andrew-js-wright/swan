@@ -1,4 +1,4 @@
-\documentclass[12pt,twocolumn]{article}
+\documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
 \title{Research Dissertation}
 \author{Andrew Wright [40006161]}
@@ -8,13 +8,11 @@
 \usepackage{comment}
 \usepackage{listings}
 \usepackage{color}
+\usepackage[toc,page]{appendix}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \lstset { %
     language=C++,
-    numberstyle=\tiny\color{gray},
-    keywordstyle=\color{blue},
-    commentstyle=\color{dkgreen},
     basicstyle=\footnotesize,% basic font setting
 }
 \begin{document}
@@ -30,4 +28,5 @@ Here's an abstract
 
 \bibliographystyle{plain}
 \bibliography{references}
+\input{chapter_appendix}
 \end{document}

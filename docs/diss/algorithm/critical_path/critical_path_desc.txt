@@ -7,7 +7,7 @@ when each task is ready to execute (arg_issue):
      assign task's work done = parent's work done
      assign task's critcial path = parent's critical path
 
-     if task has in/out dependee objects:
+     if task has in/inout dependee objects:
      	set task's critcal path = max critical path of dependee objects
 
 when each task is finished executing (arg_release):
@@ -30,6 +30,4 @@ when each task is finished executing (arg_release):
      if task has has out/inout object dependees:
      	       set object's critical duration [MAX(obj.cd, task.cd)] 
 
-when a task is synced -- need to check if there's any difference between this and arg_release
 
-     parent's critical duration is calculated [MAX(p.cd, p.child_critical_duration)]

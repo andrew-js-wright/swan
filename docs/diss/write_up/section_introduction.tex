@@ -87,7 +87,7 @@ As previously mentioned Cilk enforces a fully strict DAG which means that direct
 
 \begin{figure} [tp]
 	\centering
-	\includegraphics [width=1\linewidth]{img/dagcompare.jpg}
+	\includegraphics {img/dagcompare.jpg}
 	\caption{Comparison between strict and non-strict DAGs. Accredited to PhD Thesis by Robert D. Blumofe \citep{id13}}
 	\label{strictdag}
 \end{figure}
@@ -111,7 +111,7 @@ Because storing the entire DAG would be expensive in terms of time and memory, S
 
 \begin{figure} [tp]
 	\centering
-	\includegraphics [width=1\linewidth] {tickettable.jpg}
+	\includegraphics [width=200px] {tickettable.jpg}
 	\caption{Reader and writer ticket actions for enqueuing and dequeueing a task and for checking readiness. The operations shown concern one accessed object per task. They are repeated for all arguments of a task, using each respective argument's R and W tickets. The w and r tickets are stored in the task descriptor \citep{id2}.}
 	\label{tickettable}
 \end{figure}

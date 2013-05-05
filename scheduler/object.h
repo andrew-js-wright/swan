@@ -1826,19 +1826,19 @@ struct critical_path_task_end_functor {
        task_duration 
        );
 
-    // get critical duration of parent and add it to this task's duration
-    t->set_critical_duration
-      (
-       t->get_critical_duration() +
-       task_duration
-       );
-
     // get the critical duration of a given task
     if(t->get_critical_duration() < 
        (temp = t->get_child_critical_duration()))
       {
 	t->set_critical_duration(temp);
       }
+
+    // append the duration to the critical path
+    t->set_critical_duration
+      (
+       t->get_critical_duration() +
+       task_duration
+       );
  
     pr->mutex.lock();
 
@@ -1906,7 +1906,7 @@ struct critical_path_task_end_functor {
       sprintf(name, "output/%lu", fr->get_task_data().id);
       
       out.open(name, std::ios::app);
-      out << " | objty: inout | objcd: " << obj_ext.get_version()->get_metadata()->get_critical_duration();
+      out << " | objty: in/generic | objcd: " << obj_ext.get_version()->get_metadata()->get_critical_duration();
       //printf(" | objty: inout | objcd: %lu ", obj_ext.get_version()->get_metadata()->get_critical_duration());
       
       out.close();

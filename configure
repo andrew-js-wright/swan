@@ -2164,6 +2164,10 @@ $as_echo "/* confdefs.h */" > confdefs.h
 # Predefined preprocessor variables.
 
 cat >>confdefs.h <<_ACEOF
+#define CRITICAL_PATH 1
+_ACEOF
+
+cat >>confdefs.h <<_ACEOF
 #define PACKAGE_NAME "$PACKAGE_NAME"
 _ACEOF
 
@@ -5838,4 +5842,3 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
