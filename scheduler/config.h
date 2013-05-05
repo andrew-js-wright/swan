@@ -27,6 +27,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#ifndef CRITICAL_PATH
+#define CRITICAL_PATH 1
+#endif
+
 /* If MODE is defined as 1, we set the configuration to a fast, non-debugging
  * configuration. If MODE is 0, we set a debugging configuration. Else we
  * use the list below.

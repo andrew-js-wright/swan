@@ -32,6 +32,10 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
+#ifndef BURDEN
+#define BURDEN 100
+#endif
+
 #include "config.h"
 
 #include <type_traits>
@@ -1679,6 +1683,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
       parent = task -> get_task_data().get_task_parent();
       parent -> mutex.lock();
       parent->set_end_time();
+      
 
       unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
 
@@ -1692,10 +1697,12 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 
       task->set_critical_duration(parent->get_critical_duration());
 
+      parent->set_critical_duration(parent->get_critical_duration() + BURDEN);
+
       task->get_task_data().task_depth = parent->task_depth + 1;
 
       parent->mutex.unlock();
-
+      /*
       std::ofstream out;
       char name [50];
       sprintf(name, "output/%lu", task->get_task_data().id);
@@ -1709,7 +1716,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
       out << " | pid: " << parent->get_task_data().id;
       out << " | d: " << task->get_task_data().task_depth;
 
-      out.close();
+      out.close();*/
     }
 
      // In the default case, the internal obj_instance equals the external
@@ -1728,7 +1735,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	  }
 
 	task_critical_duration = task->get_task_data().get_critical_duration();
-
+	/*
 	std::ofstream out;
 	char name [50];
 	sprintf(name, "output/%lu", task->get_task_data().id);
@@ -1737,7 +1744,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	out << " | objty: in/gen ";
 	out << " | objcd: " << obj_critical_duration;
 
-	out.close();
+	out.close();*/
 
       }
       return true;
@@ -1752,12 +1759,13 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 	    {
 	      task->get_task_data().set_critical_duration(obj_critical_duration);
 	    }
+	  /*
 	  std::ofstream out;
 	  char name [50];
 	  sprintf(name, "output/%lu", task->get_task_data().id);
 	  out.open(name, std::ios::app);
 	  out << " | objty: inout | objcd: " << obj_critical_duration;
-	  out.close();
+	  out.close();*/
 	  //	  printf("objty: inout | objcd: %lu", obj_critical_duration);
 	  return true;	
 	}
@@ -1766,13 +1774,14 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
      template<typename T>
   bool operator () ( outdep<T> & obj, typename outdep<T>::dep_tags & sa ) {
        unsigned long obj_critical_duration = obj.get_version()->get_metadata()->get_critical_duration();
+       /*
        std::ofstream out;
        char name [50];
        sprintf(name, "output/%lu", task->get_task_data().id);
        out.open(name, std::ios::app);
        out << " | objty: out | objcd: " << obj_critical_duration;
        //printf("objty: out | objcd: %lu", obj_critical_duration);
-       out.close();
+       out.close();*/
        return true;
      } 
   };
@@ -1785,12 +1794,13 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
    char * tags = fr->get_task_data().get_tags_ptr();
    arg_apply_fn<critical_path_task_spawn_functor<MetaData, Task>,Tn...>( fn, args, tags );  
 
+   /*
    std::ofstream out;
    char name [50];
    sprintf(name, "output/%lu", fr->get_task_data().id);
    out.open(name, std::ios::app);
    out << "\n";
-   out.close();
+   out.close();*/
  }
 
 //A function to record the critical path of tasks when they end
@@ -1812,6 +1822,8 @@ struct critical_path_task_end_functor {
 
     // Retrieve parent
     pr = t->get_task_parent();
+
+    pr->set_start_time();
 
     unsigned long task_duration = 
       (
@@ -1868,6 +1880,7 @@ struct critical_path_task_end_functor {
       
     pr->mutex.unlock();
 
+    /*
     std::ofstream out;
     char name [50];
     sprintf(name, "output/%lu", task->get_task_data().id);
@@ -1884,9 +1897,7 @@ struct critical_path_task_end_functor {
     out << " | pid: " << pr->id;
     out << " | d: " << t->task_depth;
 
-    out.close();
-
-    pr->set_start_time();
+    out.close();*/
 
     /*  printf("id: %7lu | ", t->id);
     printf("spawned: %d | ", t->get_spawned());
@@ -1901,7 +1912,7 @@ struct critical_path_task_end_functor {
 
     template<typename T, template<typename U> class DepTy>
     bool operator () ( DepTy<T> obj_ext, typename DepTy<T>::dep_tags & sa ) {
-      std::ofstream out;
+      /*      std::ofstream out;
       char name [50];
       sprintf(name, "output/%lu", fr->get_task_data().id);
       
@@ -1909,7 +1920,7 @@ struct critical_path_task_end_functor {
       out << " | objty: in/generic | objcd: " << obj_ext.get_version()->get_metadata()->get_critical_duration();
       //printf(" | objty: inout | objcd: %lu ", obj_ext.get_version()->get_metadata()->get_critical_duration());
       
-      out.close();
+      out.close();*/
       return true;
     }
 
@@ -1922,6 +1933,7 @@ struct critical_path_task_end_functor {
     if(task_critical_duration > obj_critical_duration)
       obj_version->set_critical_duration( task_critical_duration );
  
+    /*
     std::ofstream out;
     char name [50];
     sprintf(name, "output/%lu", fr->get_task_data().id);
@@ -1930,7 +1942,7 @@ struct critical_path_task_end_functor {
     out << " | objty: out | objcd : " << obj_version->get_critical_duration();
 
     //printf(" | objty: out | objcd: %lu ", obj_version->get_critical_duration());
-    out.close();
+    out.close();*/
     return true;
   } 
 
@@ -1943,13 +1955,14 @@ struct critical_path_task_end_functor {
     if(task_critical_duration > obj_critical_duration)
       obj_version->set_critical_duration( task_critical_duration );
  
+    /*
     std::ofstream out;
     char name [50];
     sprintf(name, "output/%lu", fr->get_task_data().id);
     out.open(name, std::ios::app);
     out << " | objty: inout | objcd: " << obj_version->get_critical_duration();
     //printf(" | objty: inout | objcd: %lu ", obj_version->get_critical_duration());
-    out.close();
+    out.close();*/
     return true;
   } 
 
@@ -1961,13 +1974,13 @@ struct critical_path_task_end_functor {
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
     arg_apply_fn<critical_path_task_end_functor<MetaData, Task>,Tn...>( fn, args, tags );  
-    std::ofstream out;
+    /*    std::ofstream out;
     char name [50];
     sprintf(name, "output/%lu", fr->get_task_data().id);
     out.open(name, std::ios::app);
     out << "\n";
     out.close();
-    //printf("\n");
+    //printf("\n");*/
 }
 #endif
 
