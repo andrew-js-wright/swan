@@ -37,7 +37,7 @@
 #include "pp_time.h"
 
 #ifndef NB
-#define NB 100 
+#define NB 150 
 #endif
 #ifndef BS
 #define BS 32 
