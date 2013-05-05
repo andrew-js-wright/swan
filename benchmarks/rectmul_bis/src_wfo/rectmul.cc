@@ -40,6 +40,7 @@ static const char *ident __attribute__((__unused__))
 
 #if ALGO == 0
 #include "cblas.h"
+typedef int blasint;
 #endif
 
 #define JIK 0

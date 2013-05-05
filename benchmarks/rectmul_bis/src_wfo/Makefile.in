@@ -9,7 +9,7 @@ include $(top_builddir)/util/Makefile.use_us
 
 cblas_dir=$(HOME)
 
-$(PROG): LDLIBS+=-lgoto2_barcelona-r1.13
+$(PROG): LDLIBS+=-lblas -llapack
 
 $(PROG): $(PROG).cc $(top_builddir)/util/getoptions.o
 $(PROG): $(SCHEDULER_GOALS)
