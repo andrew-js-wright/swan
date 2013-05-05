@@ -1,0 +1,179 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf370
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww13640\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\fs24 \cf0 Benchmark runs - 29/04/2013\
+============\
+\
+
+\b cholesky2 
+\b0 \
+\
+result: \
+\
+	compile error\
+\
+possible reasons:\
+\
+	I'm not quite sure how to run the Blas library correctly. I assumed it would be automatically included in the path, it looks as though this isn't the case.\
+\
+command: \
+\
+	40006161@dnik02:~/swan/obj/benchmarks/cholesky2/src_wfo$ OPT="-O4 -DMODE=1" make\
+\
+output:\
+\
+gcc -g -O2 -Wall -O4 -DMODE=1 -I../../../scheduler -momit-leaf-frame-pointer -fno-omit-frame-pointer -pthread -I/home/40006161/swan/obj/../util -I../../../util -I../common -I../../../../benchmarks/cholesky2/src_wfo/../common -I/home/40006161/include -L/home/40006161/lib   -c -o ../../../util/getoptions.o ../../../../benchmarks/cholesky2/src_wfo/../../../util/getoptions.c\
+g++ -g -O2 -Wall -O4 -DMODE=1 -I../../../scheduler -std=c++0x -momit-leaf-frame-pointer -fno-omit-frame-pointer -pthread -I/home/40006161/swan/obj/../scheduler -I/home/40006161/swan/obj/../util -I../../../util -I../common -I../../../../benchmarks/cholesky2/src_wfo/../common -I/home/40006161/include -L/home/40006161/lib   -pthread -O4 -DMODE=1   ../../../../benchmarks/cholesky2/src_wfo/cholesky.cc ../../../util/getoptions.o /home/40006161/swan/obj/scheduler/libschedulers.a  /home/40006161/swan/obj/scheduler/libschedulers.a /home/40006161/swan/obj/util/libtime_us.a -lgoto2_barcelona-r1.13 -o cholesky\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc: In function \'91void smpSs_sgemm_tile(bin, bin, binout, long unsigned int)\'92:\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:93:9: error: \'91blasint\'92 was not declared in this scope\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:93:30: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:93:43: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:94:33: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:96:32: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc: In function \'91void smpSs_strsm_tile(bin, binout, long unsigned int)\'92:\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:120:5: error: \'91blasint\'92 was not declared in this scope\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:120:26: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:121:28: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:122:26: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc: In function \'91void smpSs_ssyrk_tile(bin, binout, long unsigned int)\'92:\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:146:7: error: \'91blasint\'92 was not declared in this scope\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:146:28: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:147:29: error: expected \'91)\'92 before \'91NB\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:148:28: error: expected \'91)\'92 before \'91NB\'92\
+In file included from /home/40006161/swan/obj/../scheduler/wf_stack_frame.h:40:0,\
+                 from /home/40006161/swan/obj/../scheduler/wf_spawn_deque.h:30,\
+                 from /home/40006161/swan/obj/../scheduler/wf_interface.h:31,\
+                 from ../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:37:\
+/home/40006161/swan/obj/../scheduler/object.h: In static member function \'91static void obj::typeinfo::construct(void*) [with T = float []]\'92:\
+/home/40006161/swan/obj/../scheduler/object.h:844:5:   instantiated from \'91static obj::obj_version<MetaData>* obj::obj_version<MetaData>::create(size_t, obj::obj_instance<MetaData>*) [with T = float [], MetaData = obj::tkt_metadata, size_t = long unsigned int]\'92\
+/home/40006161/swan/obj/../scheduler/object.h:2275:2:   instantiated from \'91obj::object_t<T, OMod>::object_t(size_t) [with T = float [], obj::obj_modifiers_t OMod = (obj::obj_modifiers_t)0u, size_t = long unsigned int]\'92\
+../../../../benchmarks/cholesky2/src_wfo/cholesky.cc:312:36:   instantiated from here\
+/home/40006161/swan/obj/../scheduler/object.h:359:2: error: invalid use of array with unspecified bounds\
+make: *** [cholesky] Error 1\
+\
+================\
+\
+
+\b FFT
+\b0 \
+\
+result:\
+\
+	crashes on dnik when run on > 1 thread \
+\
+investigations:\
+\
+	same issue with original scheduler too.. could be something with how I ran the configure file initially:\
+		obj$ ../configure (as the default g++ and gcc versions were 4.6.3 already)\
+\
+command:\
+\
+	40006161@dnik02:~/swan/obj/benchmarks/fft/src_wf$ NUM_THREADS=10 ./fft -n 2000000\
+\
+output:\
+\
+*** longjmp causes uninitialized stack frame ***: ./fft terminated\
+======= Backtrace: =========\
+/lib/x86_64-linux-gnu/libc.so.6(__fortify_fail+0x37)[0x7fd24faf2807]\
+/lib/x86_64-linux-gnu/libc.so.6(+0x10a77d)[0x7fd24faf277d]\
+*** longjmp causes uninitialized stack frame ***: ./fft./fft[0x40150b]\
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xed)[0x7fd24fa0976d]\
+./fft[0x40186d]\
+======= Memory map: ========\
+00400000-00416000 r-xp 00000000 fc:00 19268040                           /home/40006161/swan/obj/benchmarks/fft/src_wf/fft\
+00616000-00617000 r--p 00016000 fc:00 19268040                           /home/40006161/swan/obj/benchmarks/fft/src_wf/fft\
+00617000-00618000 rw-p 00017000 fc:00 19268040                           /home/40006161/swan/obj/benchmarks/fft/src_wf/fft\
+00f75000-00f98000 rw-p 00000000 00:00 0                                  [heap]\
+7fd200000000-7fd200021000 rw-p 00000000 00:00 0 \
+7fd200021000-7fd204000000 ---p 00000000 00:00 0 \
+7fd208000000-7fd208021000 rw-p 00000000 00:00 0 \
+7fd208021000-7fd20c000000 ---p 00000000 00:00 0 \
+7fd210000000-7fd210021000 rw-p 00000000 00:00 0 \
+7fd210021000-7fd214000000 ---p 00000000 00:00 0 \
+7fd218000000-7fd218021000 rw-p 00000000 00:00 0 \
+7fd218021000-7fd21c000000 ---p 00000000 00:00 0 \
+7fd220000000-7fd220021000 rw-p 00000000 00:00 0 \
+7fd220021000-7fd224000000 ---p 00000000 00:00 0 \
+7fd228000000-7fd228021000 rw-p 00000000 00:00 0 \
+7fd228021000-7fd22c000000 ---p 00000Aborted (core dumped)\
+\
+==============\
+\
+
+\b Jacobi
+\b0 \
+\
+result:\
+\
+	crashes on dnik when run on > 1 thread\
+\
+investigations:\
+\
+	same as above\
+\
+command:\
+\
+	40006161@dnik02:~/swan/obj/benchmarks/jacobi/src_wfo$ ./J_jacobi\
+\
+output:\
+\
+*** longjmp causes uninitialized stack frame ***: ./J_jacobi terminated\
+======= Backtrace: =========\
+/lib/x86_64-linux-gnu/libc.so.6(__fortify_fail+0x37)[0x7fbbac60a807]\
+/lib/x86_64-linux-gnu/libc.so.6(+0x10a77d)[0x7fbbac60a77d]\
+/lib/x86_64-linux-gnu/libc.so.6(__longjmp_chk+0x33)[0x7fbbac60a6e3]\
+./J_jacobi[0x40a86d]\
+./J_jacobi[0x40a355]\
+./J_jacobi[0x407596]\
+./J_jacobi[0x40829e]\
+./J_jacobi[0x407f80]\
+./J_jacobi[0x40134f]\
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xed)[0x7fbbac52176d]\
+./J_jacobi[0x40178d]\
+======= Memory map: ========\
+00400000-00410000 r-xp 00000000 fc:00 19268089                           /home/40006161/swan/obj/benchmarks/jacobi/src_wfo/J_jacobi\
+0060f000-00610000 r--p 0000f000 fc:00 19268089                           /home/40006161/swan/obj/benchmarks/jacobi/src_wfo/J_jacobi\
+00610000-00611000 rw-p 00010000 fc:00 19268089                           /home/40006161/swan/obj/benchmarks/jacobi/src_wfo/J_jacobi\
+00611000-00651000 rw-p 00000000 00:00 0 \
+01b16000-05edd000 rw-p 00000000 00:00 0                                  [heap]\
+7fbba4000000-7fbba4021000 rw-p 00000000 00:00 0 \
+7fbba4021000-7fbba8000000 ---p 00000000 00:00 0 \
+7fbbab8f6000-7fbbab9ff000 rw-p 00000000 00:00 0 \
+7fbbab9ff000-7fbbaba00000 ---p 00000000 00:00 0 \
+7fbbaba00000-7fbbac200000 rw-p 00000000 00:00 0 \
+7fbbac200000-7fbbac2fb000 r-xp 00000000 fc:00 20713282                   /lib/x86_64-linux-gnu/libm-2.15.so\
+7fbbac2fb000-7fbbac4fa000 ---p 000fb000 fc:00 20713282                   /lib/x86_64-linux-gnu/libm-2.15.so\
+7fbbac4fa000-7fbbac4fb000 r--p 000fa000 fc:00 20713282                   /lib/x86_64-linux-gnu/libm-2.15.so\
+7fbbac4fb000-7fbbac4fc000 rw-p 000fb000 fc:00 20713282                   /lib/x86_64-linux-gnu/libm-2.15.so\
+7fbbac500000-7fbbac6b5000 r-xp 00000000 fc:00 20713274                   /lib/x86_64-linux-gnu/libc-2.15.so\
+7fbbac6b5000-7fbbac8b4000 ---p 001b5000 fc:00 20713274                   /lib/x86_64-linux-gnu/libc-2.15.so\
+7fbbac8b4000-7fbbac8b8000 r--p 001b4000 fc:00 20713274                   /lib/x86_64-linux-gnu/libc-2.15.so\
+7fbbac8b8000-7fbbac8ba000 rw-p 001b8000 fc:00 20713274                   /lib/x86_64-linux-gnu/libc-2.15.so\
+7fbbac8ba000-7fbbac8bf000 rw-p 00000000 00:00 0 \
+7fbbac8c0000-7fbbac8d8000 r-xp 00000000 fc:00 20713276                   /lib/x86_64-linux-gnu/libpthread-2.15.so\
+7fbbac8d8000-7fbbacad7000 ---p 00018000 fc:00 20713276                   /lib/x86_64-linux-gnu/libpthread-2.15.so\
+7fbbacad7000-7fbbacad8000 r--p 00017000 fc:00 20713276                   /lib/x86_64-linux-gnu/libpthread-2.15.so\
+7fbbacad8000-7fbbacad9000 rw-p 00018000 fc:00 20713276                   /lib/x86_64-linux-gnu/libpthread-2.15.so\
+7fbbacad9000-7fbbacadd000 rw-p 00000000 00:00 0 \
+7fbbacae0000-7fbbacaf5000 r-xp 00000000 fc:00 20714982                   /lib/x86_64-linux-gnu/libgcc_s.so.1\
+7fbbacaf5000-7fbbaccf4000 ---p 00015000 fc:00 20714982                   /lib/x86_64-linux-gnu/libgcc_s.so.1\
+7fbbaccf4000-7fbbaccf5000 r--p 00014000 fc:00 20714982                   /lib/x86_64-linux-gnu/libgcc_s.so.1\
+7fbbaccf5000-7fbbaccf6000 rw-p 00015000 fc:00 20714982                   /lib/x86_64-linux-gnu/libgcc_s.so.1\
+7fbbaccf8000-7fbbacdde000 r-xp 00000000 fc:00 6686174                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.18\
+7fbbacdde000-7fbbacfdd000 ---p 000e6000 fc:00 6686174                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.18\
+7fbbacfdd000-7fbbacfe5000 r--p 000e5000 fc:00 6686174                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.18\
+7fbbacfe5000-7fbbacfe7000 rw-p 000ed000 fc:00 6686174                    /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.18\
+7fbbacfe7000-7fbbacffc000 rw-p 00000000 00:00 0 \
+7fbbad000000-7fbbad022000 r-xp 00000000 fc:00 20713288                   /lib/x86_64-linux-gnu/ld-2.15.so\
+7fbbad062000-7fbbad222000 rw-p 00000000 00:00 0 \
+7fbbad222000-7fbbad223000 r--p 00022000 fc:00 20713288                   /lib/x86_64-linux-gnu/ld-2.15.so\
+7fbbad223000-7fbbad225000 rw-p 00023000 fc:00 20713288                   /lib/x86_64-linux-gnu/ld-2.15.so\
+7fbbad225000-7fbbad22b000 rw-p 00000000 00:00 0 \
+7ffffd79a000-7ffffd7bb000 rw-p 00000000 00:00 0                          [stack]\
+7ffffd800000-7ffffd801000 r-xp 00000000 00:00 0                          [vdso]\
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]\
+Aborted (core dumped)\
+}

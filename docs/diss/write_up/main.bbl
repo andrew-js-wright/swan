@@ -1,0 +1,91 @@
+\begin{thebibliography}{10}
+
+\bibitem{id19}
+T.E. Anderson and E.D. Lazowska.
+\newblock {\em Quartz: A tool for tuning parallel program performance},
+  volume~18.
+\newblock ACM, 1990.
+
+\bibitem{id13}
+R.D. Blumofe.
+\newblock {\em Executing multithreaded programs efficiently}.
+\newblock PhD thesis, Massachusetts Institute of Technology, 1995.
+
+\bibitem{id14}
+R.D. Blumofe, C.F. Joerg, B.C. Kuszmaul, C.E. Leiserson, K.H. Randall, and
+  Y.~Zhou.
+\newblock {\em Cilk: An efficient multithreaded runtime system}, volume~30.
+\newblock ACM, 1995.
+
+\bibitem{id12}
+C.~Ding and T.~Chilimbi.
+\newblock A composable model for analyzing locality of multi-threaded programs.
+\newblock Technical report, Technical Report MSR-TR-2009-107, Microsoft
+  Research, 2009.
+
+\bibitem{id16}
+M.~Frigo, P.~Halpern, C.E. Leiserson, and S.~Lewin-Berlin.
+\newblock Reducers and other cilk++ hyperobjects.
+\newblock In {\em Proceedings of the twenty-first annual symposium on
+  Parallelism in algorithms and architectures}, pages 79--90. ACM, 2009.
+
+\bibitem{id5}
+M.~Frigo, C.E. Leiserson, and K.H. Randall.
+\newblock The implementation of the cilk-5 multithreaded language.
+\newblock {\em ACM Sigplan Notices}, 33(5):212--223, 1998.
+
+\bibitem{id18}
+S.L. Graham, P.B. Kessler, and M.K. Mckusick.
+\newblock Gprof: A call graph execution profiler.
+\newblock {\em ACM Sigplan Notices}, 17(6):120--126, 1982.
+
+\bibitem{id8}
+Y.~He, C.E. Leiserson, and W.M. Leiserson.
+\newblock The cilkview scalability analyzer.
+\newblock In {\em Proceedings of the 22nd ACM symposium on Parallelism in
+  algorithms and architectures}, pages 145--156. ACM, 2010.
+
+\bibitem{id4}
+J.K. Hollingsworth and B.P. Miller.
+\newblock Parallel program performance metrics: a comprison and validation.
+\newblock In {\em Proceedings of the 1992 ACM/IEEE conference on
+  Supercomputing}, pages 4--13. IEEE Computer Society Press, 1992.
+
+\bibitem{id15}
+C.F. Joerg.
+\newblock {\em The cilk system for parallel multithreaded computing}.
+\newblock PhD thesis, Citeseer, 1996.
+
+\bibitem{id20}
+B.P. Miller, M.~Clark, J.~Hollingsworth, S.~Kierstead, S.S. Lim, and
+  T.~Torzewski.
+\newblock Ips-2: The second generation of a parallel program measurement
+  system.
+\newblock {\em Parallel and Distributed Systems, IEEE Transactions on},
+  1(2):206--217, 1990.
+
+\bibitem{id21}
+Stephen~L. Olivier, Bronis~R. de~Supinski, Martin Schultz, and Jan~F. Prins.
+\newblock Characterizing and mitigating work time inflation in task parallel
+  programs.
+\newblock 2012.
+
+\bibitem{id0}
+J.~Pérez, R.~Badia, and J.~Labarta.
+\newblock A dependency-aware task-based programming environment for multi-core
+  architectures.
+\newblock pages 142--151, 2008.
+
+\bibitem{id17}
+Andreas Sandberg, David Black-Schaffer, and Erik Hagersten.
+\newblock Efficient techniques for predicting cache sharing and throughput.
+\newblock In {\em Proceedings of the 21st international conference on Parallel
+  architectures and compilation techniques}, PACT '12, pages 305--314, New
+  York, NY, USA, 2012. ACM.
+
+\bibitem{id2}
+H.~Vandierendonck, G.~Tzenakis, and D.S. Nikolopoulos.
+\newblock A unified scheduler for recursive and task dataflow parallelism.
+\newblock pages 1 --11, oct. 2011.
+
+\end{thebibliography}
