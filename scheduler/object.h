@@ -33,7 +33,7 @@
 #define OBJECT_H
 
 #ifndef BURDEN
-#define BURDEN 100
+#define BURDEN 0
 #endif
 
 #include "config.h"
@@ -1683,7 +1683,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
       parent = task -> get_task_data().get_task_parent();
       parent -> mutex.lock();
       parent->set_end_time();
-      
+      task->set_start_time();
 
       unsigned long parent_duration = parent->get_end_time() - parent->get_start_time();
 
@@ -1697,7 +1697,7 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 
       task->set_critical_duration(parent->get_critical_duration());
 
-      parent->set_critical_duration(parent->get_critical_duration() + BURDEN);
+      //      parent->set_critical_duration(parent->get_critical_duration() + BURDEN);
 
       task->get_task_data().task_depth = parent->task_depth + 1;
 
@@ -1789,11 +1789,13 @@ static inline void arg_dgrab_fn( Task * fr, obj_dep_traits * odt, bool wakeup, T
 // A function to record the critical path of tasks on their spawn.
   template<typename MetaData, typename Task, typename... Tn>
   static inline void critical_path_task_spawn( Task * fr) {
+    if(fr->get_task_data().spawned)
+      {
    critical_path_task_spawn_functor<MetaData, Task> fn( fr );
    char * args = fr->get_task_data().get_args_ptr();
    char * tags = fr->get_task_data().get_tags_ptr();
    arg_apply_fn<critical_path_task_spawn_functor<MetaData, Task>,Tn...>( fn, args, tags );  
-
+      }
    /*
    std::ofstream out;
    char name [50];
@@ -1870,14 +1872,15 @@ struct critical_path_task_end_functor {
 	 + task_duration
 	 );
     }
-    // If the task hasn't been spawned then compare with the
+    else{
+    // If the task has been spawned then compare with the
     // parent's child critical duration
     if(pr->get_child_critical_duration() < 
        (temp = t->get_task_data().get_critical_duration()))
       {
 	pr->set_child_critical_duration(temp);
       }
-      
+    }
     pr->mutex.unlock();
 
     /*
@@ -1970,11 +1973,13 @@ struct critical_path_task_end_functor {
 
   template<typename MetaData, typename Task, typename... Tn>
   static inline void critical_path_task_end( Task * fr) {
+    if(fr->get_task_data().spawned)
+      {
     critical_path_task_end_functor<MetaData, Task> fn( fr );
     char * args = fr->get_task_data().get_args_ptr();
     char * tags = fr->get_task_data().get_tags_ptr();
     arg_apply_fn<critical_path_task_end_functor<MetaData, Task>,Tn...>( fn, args, tags );  
-    /*    std::ofstream out;
+      }/*    std::ofstream out;
     char name [50];
     sprintf(name, "output/%lu", fr->get_task_data().id);
     out.open(name, std::ios::app);

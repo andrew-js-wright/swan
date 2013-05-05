@@ -172,9 +172,9 @@ class task_data_t {
 
   // This flag will be set if the task has been spawned, regardless of whether it
   // is run in parallel or not.
-  bool spawned;
 
 public:
+  bool spawned;
   int task_depth;
   unsigned long id;
 
